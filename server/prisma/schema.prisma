@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+}
+
+enum RecordType {
+  INCOMING
+  OUTGOING
+}
+
+enum RecordStatus {
+  PENDING
+  RECEIVED
+  RELEASED
+}
+
+enum ActivityAction {
+  CREATED
+  UPDATED
+  DELETED
+  BULK_DELETED
+  LOGIN
+  REGISTERED
+  CHANGED_PASSWORD
+  CHANGED_EMAIL
+  CHANGED_USERNAME
+}
+
+model User {
+  id           String        @id @default(uuid())
+  username     String        @unique
+  email        String        @unique
+  password     String
+  name         String
+  role         UserRole      @default(ADMIN)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  records      Record[]      @relation("ProcessedBy")
+  activityLogs ActivityLog[]
+
+  @@map("users")
+}
+
+model Record {
+  id                 String       @id @default(uuid())
+  type               RecordType
+  status             RecordStatus @default(PENDING)
+
+  documentTitle      String
+  documentNumber     String       @default("")
+  particulars        String       @default("")
+  category           String       @default("")
+
+  fromOffice         String       @default("")
+  toOffice           String       @default("")
+  subject            String       @default("")
+
+  personName         String
+  personEmail        String       @default("")
+  personDepartment   String       @default("")
+  personPosition     String       @default("")
+
+  documentDate       DateTime
+  receivedAt         DateTime?
+  releasedAt         DateTime?
+
+  remarks            String       @default("")
+  actionTaken        String       @default("")
+
+  submitterSignature String?
+  receiverSignature  String?
+
+  processedById      String?
+  processedBy        User?        @relation("ProcessedBy", fields: [processedById], references: [id])
+
+  isDeleted          Boolean      @default(false)
+  deletedAt          DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@map("records")
+}
+
+model ActivityLog {
+  id         String         @id @default(uuid())
+  action     ActivityAction
+  entityType String
+  entityId   String?
+  entityName String?
+  details    String         @default("")
+  adminId    String?
+  adminName  String?
+  createdAt  DateTime       @default(now())
+
+  @@map("activityLogs")
+}
