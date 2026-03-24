@@ -34,13 +34,13 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/5 shrink-0">
+      <div className="px-5 border-b border-white/5 shrink-0 h-14 flex items-center">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
             <img
               src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
               alt="NBSC"
-              className="w-7 h-7 object-contain"
+              className="w-6 h-6 object-contain"
               onError={(e) => {
                 const img = e.currentTarget;
                 img.style.display = "none";
@@ -49,13 +49,13 @@ function SidebarContent({
               }}
             />
             <span
-              className="text-blue-400 text-sm font-black select-none w-full h-full items-center justify-center"
+              className="text-blue-400 text-xs font-black select-none w-full h-full items-center justify-center"
               style={{ display: "none" }}
             >N</span>
           </div>
           <div className="min-w-0">
             <p className="text-white text-sm font-bold leading-tight">NBSC SAS</p>
-            <p className="text-gray-500 text-[10px] uppercase tracking-widest">Records Log</p>
+            <p className="text-gray-500 text-[9px] uppercase tracking-widest">Records Log</p>
           </div>
         </div>
       </div>
@@ -197,27 +197,14 @@ export default function DashboardLayout() {
 
           {/* Logo in topbar — mobile only */}
           <div className="flex lg:hidden items-center gap-2.5 flex-1">
-            <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center overflow-hidden shrink-0">
-              <img
-                src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
-                alt="NBSC"
-                className="w-5 h-5 object-contain"
-                onError={(e) => {
-                  const img = e.currentTarget;
-                  img.style.display = "none";
-                  const fb = img.nextElementSibling as HTMLElement | null;
-                  if (fb) fb.style.display = "flex";
-                }}
-              />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+              
               <span
-                className="text-blue-400 text-[10px] font-black w-full h-full items-center justify-center"
+                className="text-blue-400 text-[9px] font-black w-full h-full items-center justify-center"
                 style={{ display: "none" }}
               >N</span>
             </div>
-            <div>
-              <p className="text-white text-xs font-bold leading-tight tracking-wide">NBSC SAS</p>
-              <p className="text-gray-500 text-[9px] uppercase tracking-widest leading-none">Records Log</p>
-            </div>
+            
           </div>
 
           <div className="hidden lg:flex flex-1" />
