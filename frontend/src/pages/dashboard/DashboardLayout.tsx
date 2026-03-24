@@ -54,7 +54,7 @@ function SidebarContent({
             >N</span>
           </div>
           <div className="min-w-0">
-            <p className="text-white text-sm font-bold leading-tight">NBSC SAS</p>
+            <p className="text-white text-sm font-bold tracking-widest">NBSC SAS</p>
             <p className="text-gray-500 text-[9px] uppercase tracking-widest">Records Log</p>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function DashboardLayout() {
       <div className="flex-1 lg:ml-56 flex flex-col min-h-screen min-w-0">
 
         {/* Topbar */}
-        <header className="sticky top-0 z-40 bg-gray-950/80 backdrop-blur-sm border-b border-white/5 px-4 lg:px-6 h-14 flex items-center gap-3">
+        <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm border-b border-white/5 px-4 lg:px-6 h-14 flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0"
@@ -210,17 +210,26 @@ export default function DashboardLayout() {
           <div className="hidden lg:flex flex-1" />
 
           {/* Profile */}
-          <div id="profile-menu" className="relative">
+          <div id="profile-menu" className="relative pl-3 border-l border-l-blue-500/30">
             <button
               onClick={() => setProfileOpen((p) => !p)}
-              className="flex items-center gap-2 focus:outline-none"
+              className="flex items-center gap-3 focus:outline-none group"
             >
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
-                <span className="text-white text-[10px] font-black">{initial}</span>
+              {/* Avatar */}
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/10">
+                <span className="text-white text-[11px] font-black">{initial}</span>
               </div>
-              <span className="hidden sm:block text-white text-xs font-semibold max-w-[120px] truncate">
-                {userName}
-              </span>
+
+              {/* Stacked Text Section */}
+              <div className="hidden sm:flex flex-col items-start text-left min-w-0">
+                <span className="text-white text-xs font-bold leading-tight truncate w-full max-w-[120px]">
+                  {userName}
+                </span>
+                <span className="text-gray-500 text-[10px] leading-tight truncate w-full max-w-[140px]">
+                  {userEmail}
+                </span>
+              </div>
+
               <FaChevronDown
                 size={9}
                 className={`hidden sm:block text-gray-500 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
@@ -228,7 +237,7 @@ export default function DashboardLayout() {
             </button>
 
             {profileOpen && (
-              <div className="absolute right-0 top-10 w-44 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+              <div className="absolute right-0 top-11 w-48 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                 <div className="px-4 py-3 border-b border-white/5">
                   <p className="text-white text-xs font-semibold truncate">{userName}</p>
                   <p className="text-gray-500 text-[10px] mt-0.5 truncate">{userEmail}</p>
