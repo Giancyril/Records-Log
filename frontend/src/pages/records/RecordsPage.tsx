@@ -5,12 +5,17 @@ import { toast } from "react-toastify";
 import {
   FaPlus, FaSearch, FaTrash, FaEye, FaFileAlt, FaTimes,
   FaCheckSquare, FaSquare, FaFilter, FaDownload,
+  FaInbox, FaPaperPlane
 } from "react-icons/fa";
 import type { Record as Rec } from "../../types/types";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useConfirm } from "../../hooks/useConfirm";
 
-const TYPE_TABS   = [{ label: "All", value: "" }, { label: "Incoming", value: "INCOMING" }, { label: "Outgoing", value: "OUTGOING" }];
+const TYPE_TABS = [
+  { label: "All Records", value: "", icon: FaFileAlt },
+  { label: "Incoming", value: "INCOMING", icon: FaInbox },
+  { label: "Outgoing", value: "OUTGOING", icon: FaPaperPlane }
+];
 const STATUS_TABS = [{ label: "All", value: "" }, { label: "Pending", value: "PENDING" }, { label: "Received", value: "RECEIVED" }, { label: "Released", value: "RELEASED" }];
 
 const TYPE_COLOR: Record<string, string> = {
@@ -18,7 +23,7 @@ const TYPE_COLOR: Record<string, string> = {
   OUTGOING: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
 };
 const STATUS_COLOR: Record<string, string> = {
-  PENDING:  "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/20",
   RECEIVED: "bg-blue-500/15 text-blue-400 border-blue-500/20",
   RELEASED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
 };
@@ -27,16 +32,16 @@ const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
 const exportCSV = (records: Rec[]) => {
-  const headers = ["Title","Number","Type","Status","Person","Department","From Office","To Office","Document Date","Created"];
-  const rows    = records.map(r => [
+  const headers = ["Title", "Number", "Type", "Status", "Person", "Department", "From Office", "To Office", "Document Date", "Created"];
+  const rows = records.map(r => [
     r.documentTitle, r.documentNumber, r.type, r.status,
     r.personName, r.personDepartment, r.fromOffice, r.toOffice,
     fmt(r.documentDate), fmt(r.createdAt),
   ]);
-  const csv  = [headers, ...rows].map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+  const csv = [headers, ...rows].map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
   a.href = url; a.download = `records-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
   URL.revokeObjectURL(url);
 };
@@ -44,32 +49,32 @@ const exportCSV = (records: Rec[]) => {
 export default function RecordsPage() {
   const { confirm, isOpen, options, handleConfirm, handleCancel } = useConfirm();
 
-  const [search,      setSearch]      = useState("");
-  const [type,        setType]        = useState("");
-  const [status,      setStatus]      = useState("");
-  const [page,        setPage]        = useState(1);
-  const [selected,    setSelected]    = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("");
+  const [status, setStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
-  const [dateFrom,    setDateFrom]    = useState("");
-  const [dateTo,      setDateTo]      = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-  const [deleteRecord]                            = useDeleteRecordMutation();
+  const [deleteRecord] = useDeleteRecordMutation();
   const [bulkDelete, { isLoading: bulkDeleting }] = useBulkDeleteRecordsMutation();
 
   const { data, isLoading } = useGetRecordsQuery({
     search, type, status, page, limit: 12,
     ...(dateFrom && { dateFrom }),
-    ...(dateTo   && { dateTo }),
+    ...(dateTo && { dateTo }),
   });
 
   const records = (data?.data ?? []) as Rec[];
-  const meta    = data?.meta;
+  const meta = data?.meta;
 
-  const hasFilters        = !!(dateFrom || dateTo);
+  const hasFilters = !!(dateFrom || dateTo);
   const allOnPageSelected = records.length > 0 && records.every(r => selected.has(r.id));
-  const toggleSelect      = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const toggleAll         = () => setSelected(prev => prev.size === records.length ? new Set() : new Set(records.map(r => r.id)));
-  const clearSelection    = () => setSelected(new Set());
+  const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleAll = () => setSelected(prev => prev.size === records.length ? new Set() : new Set(records.map(r => r.id)));
+  const clearSelection = () => setSelected(new Set());
 
   const handleDelete = async (r: Rec) => {
     const ok = await confirm({ title: "Delete Record", message: `Delete "${r.documentTitle}"? This cannot be undone.`, confirmText: "Delete", variant: "danger" });
@@ -155,8 +160,19 @@ export default function RecordsPage() {
         </div>
       )}
 
-      {/* Search + Tabs */}
-      <div className="space-y-2">
+      {/* Primary Categories (Type) */}
+      <div className="flex gap-1.5 p-1 bg-gray-900 border border-white/5 rounded-2xl w-fit max-w-full overflow-x-auto no-scrollbar shadow-xl shadow-black/20">
+        {TYPE_TABS.map(({ label, value, icon: Icon }) => (
+          <button key={value} onClick={() => { setType(value); setPage(1); }}
+            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${type === value ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
+            <Icon size={13} className={type === value ? "text-white" : "text-gray-500"} />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Search + Secondary Filters */}
+      <div className="space-y-3">
         <div className="relative">
           <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={12} />
           <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
@@ -165,20 +181,15 @@ export default function RecordsPage() {
           {search && <button onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><FaTimes size={11} /></button>}
         </div>
 
-        {/* Tabs — each scrollable independently on mobile */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
-            {TYPE_TABS.map(({ label, value }) => (
-              <button key={value} onClick={() => { setType(value); setPage(1); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${type === value ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}>
-                {label}
-              </button>
-            ))}
+        {/* Status Chips (Secondary) */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          <div className="flex items-center gap-1.5 px-2 text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
+            <FaFilter size={9} className="text-gray-600" /> Refine
           </div>
-          <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-1.5">
             {STATUS_TABS.map(({ label, value }) => (
               <button key={value} onClick={() => { setStatus(value); setPage(1); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${status === value ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${status === value ? "bg-blue-600/15 text-blue-400 border-blue-500/30" : "bg-gray-900 border-white/5 text-gray-500 hover:text-white hover:bg-white/5"}`}>
                 {label}
               </button>
             ))}
@@ -187,7 +198,7 @@ export default function RecordsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+      <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-x-auto">
         <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
           <div className="col-span-1 flex items-center">
             <button onClick={toggleAll} className="text-gray-500 hover:text-white transition-colors">

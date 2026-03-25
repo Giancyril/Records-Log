@@ -142,13 +142,11 @@ export default function DashboardLayout() {
 
           {/* Drawer */}
           <aside className="relative z-10 w-64 max-w-[82vw] h-full bg-gray-900 border-r border-white/5 flex flex-col shadow-2xl">
-            {/* Close button */}
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="absolute top-3 right-3 z-20 w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-            >
-              <FaTimes size={11} />
-            </button>
+{/* Mobile Close Button */}
+          <button onClick={() => setSidebarOpen(false)}
+            className="absolute top-3 right-3 z-20 lg:hidden w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white transition-colors">
+            <FaTimes size={16} />
+          </button>
 
             <SidebarContent
               userName={userName}

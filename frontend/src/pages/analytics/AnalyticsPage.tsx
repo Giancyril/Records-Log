@@ -229,7 +229,7 @@ export default function Analytics() {
               onClick={() => setGran(g)}
               className={`px-4 py-2 rounded-lg text-xs font-semibold capitalize transition-all duration-200 ${
                 gran === g
-                  ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30"
+                  ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg"
                   : "text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
