@@ -238,10 +238,10 @@ export default function RecordsPage() {
       )}
 
       {/* Primary Categories (Type) */}
-      <div className="flex gap-1.5 p-1 bg-gray-900 border border-white/5 rounded-2xl w-full sm:w-fit overflow-x-auto no-scrollbar shadow-xl shadow-black/20">
+      <div className="flex gap-1.5 p-1 bg-gray-900 border border-white/5 rounded-2xl w-full shadow-xl shadow-black/20">
         {TYPE_TABS.map(({ label, value }) => (
           <button key={value} onClick={() => { setType(value); setPage(1); }}
-            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${type === value ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
+            className={`flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center ${type === value ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
             {label}
           </button>
         ))}
@@ -258,18 +258,13 @@ export default function RecordsPage() {
         </div>
 
         {/* Status Chips (Secondary) */}
-        <div className="flex items-center gap-2 py-1 w-full overflow-hidden">
-          <div className="hidden sm:flex items-center gap-1.5 px-2 text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
-            Refine
-          </div>
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar w-full">
-            {STATUS_TABS.map(({ label, value }) => (
-              <button key={value} onClick={() => { setStatus(value); setPage(1); }}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border shrink-0 whitespace-nowrap ${status === value ? "bg-blue-600/15 text-blue-400 border-blue-500/30" : "bg-gray-900 border-white/5 text-gray-500 hover:text-white hover:bg-white/5"}`}>
-                {label}
-              </button>
-            ))}
-          </div>
+        <div className="flex gap-1.5 w-full py-1">
+          {STATUS_TABS.map(({ label, value }) => (
+            <button key={value} onClick={() => { setStatus(value); setPage(1); }}
+              className={`flex-1 min-w-0 px-1 sm:px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all border flex items-center justify-center whitespace-nowrap shrink ${status === value ? "bg-blue-600 border-blue-500/30 text-white" : "bg-gray-900 border-white/5 text-gray-400 hover:text-white hover:bg-white/5"}`}>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 

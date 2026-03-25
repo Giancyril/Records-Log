@@ -77,18 +77,13 @@ export default function ArchivePage() {
           {search && <button onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><FaTimes size={11} /></button>}
         </div>
 
-        <div className="flex items-center gap-2 py-1 w-full overflow-hidden">
-          <div className="hidden sm:flex items-center gap-1.5 px-2 text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
-            Refine
-          </div>
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar w-full">
-            {STATUS_TABS.map(({ label, value }) => (
-              <button key={value} onClick={() => { setStatus(value); setPage(1); }}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border shrink-0 whitespace-nowrap ${status === value ? "bg-blue-600/15 text-blue-400 border-blue-500/30" : "bg-gray-900 border-white/5 text-gray-500 hover:text-white hover:bg-white/5"}`}>
-                {label}
-              </button>
-            ))}
-          </div>
+        <div className="flex gap-1.5 w-full py-1">
+          {STATUS_TABS.map(({ label, value }) => (
+            <button key={value} onClick={() => { setStatus(value); setPage(1); }}
+              className={`flex-1 min-w-0 px-1 sm:px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all border flex items-center justify-center whitespace-nowrap shrink ${status === value ? "bg-blue-600 border-blue-500/30 text-white" : "bg-gray-900 border-white/5 text-gray-400 hover:text-white hover:bg-white/5"}`}>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
