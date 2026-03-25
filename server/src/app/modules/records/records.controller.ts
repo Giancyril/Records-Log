@@ -6,6 +6,7 @@ import { utils } from "../../utils/utils";
 import {
   createRecordSchema, updateRecordSchema,
   receiveRecordSchema, releaseRecordSchema,
+  CreateRecordInput,
 } from "./records.validate";
 
 const createRecord = async (req: Request, res: Response) => {
@@ -88,6 +89,39 @@ const bulkDelete = async (req: Request, res: Response) => {
   }
 };
 
+const archiveRecord = async (req: Request, res: Response) => {
+  try {
+    const result = await recordsService.archiveRecord(req.params.id, req.user!.id);
+    sendResponse(res, { res, statusCode: StatusCodes.OK, success: true, message: "Record archived", data: result });
+  } catch (err: any) {
+    sendResponse(res, { res, statusCode: err.statusCode ?? 400, success: false, message: err.message, data: null });
+  }
+};
+
+const unarchiveRecord = async (req: Request, res: Response) => {
+  try {
+    const result = await recordsService.unarchiveRecord(req.params.id, req.user!.id);
+    sendResponse(res, { res, statusCode: StatusCodes.OK, success: true, message: "Record unarchived", data: result });
+  } catch (err: any) {
+    sendResponse(res, { res, statusCode: err.statusCode ?? 400, success: false, message: err.message, data: null });
+  }
+};
+
+const bulkCreate = async (req: Request, res: Response) => {
+  try {
+    const records = req.body as CreateRecordInput[];
+    if (!Array.isArray(records) || records.length === 0)
+      return sendResponse(res, { res, statusCode: 400, success: false, message: "No records provided", data: null });
+    
+    // Validate each record
+    const validated = records.map(r => createRecordSchema.parse(r));
+    const result = await recordsService.bulkCreate(validated, req.user!.id);
+    sendResponse(res, { res, statusCode: StatusCodes.CREATED, success: true, message: `${result.length} record(s) imported`, data: result });
+  } catch (err: any) {
+    sendResponse(res, { res, statusCode: 400, success: false, message: err.message, data: null });
+  }
+};
+
 const getStats = async (_req: Request, res: Response) => {
   try {
     const result = await recordsService.getStats();
@@ -100,5 +134,6 @@ const getStats = async (_req: Request, res: Response) => {
 export const recordsController = {
   createRecord, getRecords, getSingleRecord,
   updateRecord, receiveRecord, releaseRecord,
-  deleteRecord, bulkDelete, getStats,
+  deleteRecord, bulkDelete, archiveRecord, unarchiveRecord,
+  bulkCreate, getStats,
 };

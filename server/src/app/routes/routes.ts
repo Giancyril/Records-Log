@@ -23,8 +23,11 @@ router.get   ("/records/:id",          auth, recordsController.getSingleRecord);
 router.put   ("/records/:id",          auth, recordsController.updateRecord);
 router.put   ("/records/:id/receive",  auth, recordsController.receiveRecord);
 router.put   ("/records/:id/release",  auth, recordsController.releaseRecord);
+router.put   ("/records/:id/archive",  auth, recordsController.archiveRecord);
+router.put   ("/records/:id/unarchive",auth, recordsController.unarchiveRecord);
 router.delete("/records/:id",          auth, recordsController.deleteRecord);
 router.delete("/records/bulk-delete",  auth, recordsController.bulkDelete);
+router.post  ("/records/bulk",         auth, recordsController.bulkCreate);
 
 // ── Activity Logs ─────────────────────────────────────────────────────────────
 router.get   ("/activity-logs",        auth, activityLogController.getLogs);

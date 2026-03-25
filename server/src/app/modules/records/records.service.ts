@@ -66,6 +66,12 @@ const getRecords = async (query: Record<string, any>) => {
   const dateTo   = query.dateTo   as string | undefined;
 
   const where: any = { isDeleted: false };
+  if (query.isArchived === "true") {
+    where.isArchived = true;
+  } else {
+    where.isArchived = false;
+  }
+
   if (type)   where.type   = type;
   if (status) where.status = status;
   if (search) {
@@ -262,6 +268,95 @@ const deleteRecord = async (id: string, adminId: string) => {
   });
 };
 
+const archiveRecord = async (id: string, adminId: string) => {
+  const record = await prisma.record.findFirst({
+    where:  { id, isDeleted: false, isArchived: false },
+    select: { id: true, documentTitle: true },
+  });
+  if (!record) throw new AppError(StatusCodes.NOT_FOUND, "Record not found or already archived");
+
+  const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { name: true, username: true } });
+  await activityLogService.createLog({
+    action:     "ARCHIVED",
+    entityType: "Record",
+    entityId:   record.id,
+    entityName: record.documentTitle,
+    details:    `Archived record — "${record.documentTitle}"`,
+    adminId,
+    adminName:  admin?.name || admin?.username,
+  });
+
+  return prisma.record.update({
+    where:  { id },
+    data:   { isArchived: true, archivedAt: new Date() },
+    select: { id: true, isArchived: true },
+  });
+};
+
+const unarchiveRecord = async (id: string, adminId: string) => {
+  const record = await prisma.record.findFirst({
+    where:  { id, isDeleted: false, isArchived: true },
+    select: { id: true, documentTitle: true },
+  });
+  if (!record) throw new AppError(StatusCodes.NOT_FOUND, "Record not found or not archived");
+
+  const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { name: true, username: true } });
+  await activityLogService.createLog({
+    action:     "UNARCHIVED",
+    entityType: "Record",
+    entityId:   record.id,
+    entityName: record.documentTitle,
+    details:    `Unarchived record — "${record.documentTitle}"`,
+    adminId,
+    adminName:  admin?.name || admin?.username,
+  });
+
+  return prisma.record.update({
+    where:  { id },
+    data:   { isArchived: false, archivedAt: null },
+    select: { id: true, isArchived: true },
+  });
+};
+
+const bulkCreate = async (records: CreateRecordInput[], adminId: string) => {
+  const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { name: true, username: true } });
+  
+  const created = await prisma.$transaction(
+    records.map(data => prisma.record.create({
+      data: {
+        type:               data.type,
+        documentTitle:      data.documentTitle,
+        documentNumber:     data.documentNumber ?? "",
+        particulars:        data.particulars    ?? "",
+        category:           data.category       ?? "",
+        fromOffice:         data.fromOffice     ?? "",
+        toOffice:           data.toOffice       ?? "",
+        subject:            data.subject        ?? "",
+        personName:         data.personName,
+        personEmail:        data.personEmail        ?? "",
+        personDepartment:   data.personDepartment   ?? "",
+        personPosition:     data.personPosition     ?? "",
+        documentDate:       new Date(data.documentDate),
+        remarks:            data.remarks        ?? "",
+        submitterSignature: data.submitterSignature,
+        processedById:      adminId,
+        status:             "PENDING",
+      }
+    }))
+  );
+
+  await activityLogService.createLog({
+    action:     "BULK_CREATED",
+    entityType: "Record",
+    entityName: `${created.length} records`,
+    details:    `Bulk imported ${created.length} record(s)`,
+    adminId,
+    adminName:  admin?.name || admin?.username,
+  });
+
+  return created;
+};
+
 const bulkDelete = async (ids: string[], adminId: string) => {
   const eligible = await prisma.record.findMany({
     where:  { id: { in: ids }, isDeleted: false },
@@ -289,34 +384,36 @@ const bulkDelete = async (ids: string[], adminId: string) => {
 };
 
 const getStats = async () => {
-  const [total, incoming, outgoing, pending, received, released] = await Promise.all([
-    prisma.record.count({ where: { isDeleted: false } }),
-    prisma.record.count({ where: { isDeleted: false, type: "INCOMING" } }),
-    prisma.record.count({ where: { isDeleted: false, type: "OUTGOING" } }),
-    prisma.record.count({ where: { isDeleted: false, status: "PENDING" } }),
-    prisma.record.count({ where: { isDeleted: false, status: "RECEIVED" } }),
-    prisma.record.count({ where: { isDeleted: false, status: "RELEASED" } }),
+  const [total, incoming, outgoing, pending, received, released, archived] = await Promise.all([
+    prisma.record.count({ where: { isDeleted: false, isArchived: false } }),
+    prisma.record.count({ where: { isDeleted: false, isArchived: false, type: "INCOMING" } }),
+    prisma.record.count({ where: { isDeleted: false, isArchived: false, type: "OUTGOING" } }),
+    prisma.record.count({ where: { isDeleted: false, isArchived: false, status: "PENDING" } }),
+    prisma.record.count({ where: { isDeleted: false, isArchived: false, status: "RECEIVED" } }),
+    prisma.record.count({ where: { isDeleted: false, isArchived: false, status: "RELEASED" } }),
+    prisma.record.count({ where: { isDeleted: false, isArchived: true } }),
   ]);
 
   const today     = new Date(); today.setHours(0, 0, 0, 0);
   const weekStart = new Date(today); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
 
   const [todayCount, weekCount, recentRecords] = await Promise.all([
-    prisma.record.count({ where: { isDeleted: false, createdAt: { gte: today } } }),
-    prisma.record.count({ where: { isDeleted: false, createdAt: { gte: weekStart } } }),
+    prisma.record.count({ where: { isDeleted: false, isArchived: false, createdAt: { gte: today } } }),
+    prisma.record.count({ where: { isDeleted: false, isArchived: false, createdAt: { gte: weekStart } } }),
     prisma.record.findMany({
-      where:   { isDeleted: false },
+      where:   { isDeleted: false, isArchived: false },
       orderBy: { createdAt: "desc" },
       take:    5,
       select:  { id: true, type: true, status: true, documentTitle: true, personName: true, createdAt: true },
     }),
   ]);
 
-  return { total, incoming, outgoing, pending, received, released, todayCount, weekCount, recentRecords };
+  return { total, incoming, outgoing, pending, received, released, archived, todayCount, weekCount, recentRecords };
 };
 
 export const recordsService = {
   createRecord, getRecords, getSingleRecord,
   updateRecord, receiveRecord, releaseRecord,
-  deleteRecord, bulkDelete, getStats,
+  deleteRecord, bulkDelete, archiveRecord, unarchiveRecord,
+  bulkCreate, getStats,
 };

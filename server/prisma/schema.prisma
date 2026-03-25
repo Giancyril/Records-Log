@@ -31,6 +31,9 @@ enum ActivityAction {
   CHANGED_PASSWORD
   CHANGED_EMAIL
   CHANGED_USERNAME
+  ARCHIVED
+  UNARCHIVED
+  BULK_CREATED
 }
 
 model User {
@@ -80,6 +83,8 @@ model Record {
   processedById      String?
   processedBy        User?        @relation("ProcessedBy", fields: [processedById], references: [id])
 
+  isArchived         Boolean      @default(false)
+  archivedAt         DateTime?
   isDeleted          Boolean      @default(false)
   deletedAt          DateTime?
   createdAt          DateTime     @default(now())
