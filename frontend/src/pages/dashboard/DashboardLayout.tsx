@@ -4,26 +4,22 @@ import { useAdminUser, signOut } from "../../auth/auth";
 import { toast } from "react-toastify";
 import {
   FaHome, FaFileAlt, FaHistory, FaCog, FaBars, FaTimes,
-  FaSignOutAlt, FaChevronDown,FaChartBar
+  FaSignOutAlt, FaChevronDown, FaChartBar
 } from "react-icons/fa";
 
 const NAV = [
-  { to: "/dashboard",     label: "Overview",     icon: FaHome },
-  { to: "/records",       label: "Records",       icon: FaFileAlt },
-  { to: "/activity-logs", label: "Activity Logs", icon: FaHistory },
-  { to: "/settings",      label: "Settings",      icon: FaCog },
-  { to: "/analytics", label: "Analytics", icon: FaChartBar }
+  { to: "/dashboard", label: "Overview", icon: FaHome },
+  { to: "/records", label: "Records", icon: FaFileAlt },
+  { to: "/analytics", label: "Analytics", icon: FaChartBar },
+  { to: "/activity-logs", label: "Activity Logs", icon: FaHistory }
 ];
 
 // ─── Sidebar content ──────────────────────────────────────────────────────────
 // Intentionally defined OUTSIDE DashboardLayout so React never remounts it on
 // parent re-renders — remounting was breaking NavLink click events on mobile.
 function SidebarContent({
-  userName,
-  userEmail,
-  initial,
   onNavigate,
-  onSignOut,
+  
 }: {
   userName: string;
   userEmail: string;
@@ -68,10 +64,9 @@ function SidebarContent({
             to={to}
             onClick={onNavigate}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                isActive
-                  ? "bg-blue-600/15 text-blue-400 border border-blue-500/20"
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive
+                ? "bg-blue-600/15 text-blue-400 border border-blue-500/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
               }`
             }
           >
@@ -81,33 +76,16 @@ function SidebarContent({
         ))}
       </nav>
 
-      {/* User row */}
-      <div className="px-3 py-4 border-t border-white/5 shrink-0">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03]">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
-            <span className="text-white text-[10px] font-black">{initial}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-semibold truncate">{userName}</p>
-            <p className="text-gray-500 text-[10px] truncate">{userEmail}</p>
-          </div>
-          <button
-            onClick={onSignOut}
-            title="Sign out"
-            className="text-gray-600 hover:text-red-400 transition-colors shrink-0 p-1"
-          >
-            <FaSignOutAlt size={12} />
-          </button>
-        </div>
+      
       </div>
-    </div>
+    
   );
 }
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export default function DashboardLayout() {
-  const navigate    = useNavigate();
-  const location    = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const currentUser = useAdminUser();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -135,9 +113,9 @@ export default function DashboardLayout() {
     toast.info("Signed out");
   };
 
-  const userName  = currentUser?.name  || "Admin";
+  const userName = currentUser?.name || "Admin";
   const userEmail = currentUser?.email || "";
-  const initial   = userName.charAt(0).toUpperCase();
+  const initial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
@@ -148,7 +126,7 @@ export default function DashboardLayout() {
           userName={userName}
           userEmail={userEmail}
           initial={initial}
-          onNavigate={() => {}}
+          onNavigate={() => { }}
           onSignOut={handleSignOut}
         />
       </aside>
@@ -198,13 +176,13 @@ export default function DashboardLayout() {
           {/* Logo in topbar — mobile only */}
           <div className="flex lg:hidden items-center gap-2.5 flex-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
-              
+
               <span
                 className="text-blue-400 text-[9px] font-black w-full h-full items-center justify-center"
                 style={{ display: "none" }}
               >N</span>
             </div>
-            
+
           </div>
 
           <div className="hidden lg:flex flex-1" />

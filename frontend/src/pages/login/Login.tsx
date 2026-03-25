@@ -95,25 +95,24 @@ export default function Login() {
 
           {/* Header */}
           <div className="px-8 pt-8 pb-6 border-b border-white/[0.06]">
-            <div className="flex items-center gap-4 mb-5">
+            <div className="flex flex-col items-center text-center gap-3 mb-5">
               <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-blue-600/15 border border-blue-500/25 flex items-center justify-center">
+                <div className="w-14 h-14 flex items-center justify-center">
                   <img
                     src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
                     alt="NBSC Logo"
-                    className="w-8 h-8 object-contain"
+                    className="w-16 h-16 object-contain"
                     onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-gray-900" />
+                
               </div>
               <div>
                 <h1 className="text-white font-bold text-base leading-tight tracking-tight">NBSC SAS</h1>
                 <p className="text-gray-500 text-[11px] tracking-widest uppercase mt-0.5">Records Log</p>
               </div>
             </div>
-            <div>
-              <h2 className="text-white text-xl font-bold tracking-tight">Admin Sign In</h2>
+            <div className="text-center">
               <p className="text-gray-500 text-xs mt-1">Enter your credentials to continue</p>
             </div>
           </div>

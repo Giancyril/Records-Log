@@ -40,7 +40,7 @@ const TOOLTIP_STYLE = {
 const AXIS_STYLE = { fill: "#6b7280", fontSize: 11 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const monthKey  = (d: string) => d.slice(0, 7);           // "2025-03"
+const monthKey  = (d: string) => d.slice(0, 7);
 const weekKey   = (d: string) => {
   const dt = new Date(d);
   const y   = dt.getFullYear();
@@ -92,7 +92,6 @@ function groupByOffice(records: Doc[], field: "fromOffice" | "toOffice") {
 }
 
 function processingTime(records: Doc[]) {
-  // Days from createdAt → receivedAt bucketed
   const buckets: Record<string, number> = {
     "Same day": 0, "1–2 days": 0, "3–7 days": 0, "8–30 days": 0, ">30 days": 0,
   };
@@ -119,7 +118,7 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 
 function CardHeader({ title, sub, action }: { title: string; sub?: string; action?: React.ReactNode }) {
   return (
-    <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between gap-3 bg-gradient-to-r from-white/[0.02] to-transparent">
+    <div className="px-6 py-4 flex items-center justify-between gap-3 bg-gradient-to-r from-white/[0.02] to-transparent">
       <div>
         <p className="text-white text-sm font-semibold tracking-tight">{title}</p>
         {sub && <p className="text-gray-600 text-xs mt-1">{sub}</p>}
@@ -147,7 +146,6 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-// Skeleton
 function Skeleton() {
   return (
     <div className="space-y-5 animate-pulse">
@@ -166,18 +164,16 @@ function Skeleton() {
 export default function Analytics() {
   const [gran, setGran] = useState<Granularity>("month");
 
-  // Fetch everything (large limit to get all records for analytics)
   const { data: allData, isLoading: loadingRecords } =
     useGetRecordsQuery({ limit: 1000, page: 1 });
   const { data: statsData, isLoading: loadingStats } =
     useGetRecordStatsQuery(undefined);
 
-  const records: Doc[]       = allData?.data?.records ?? allData?.data ?? [];
+  const records: Doc[]                 = allData?.data?.records ?? allData?.data ?? [];
   const stats: RecordStats | undefined = statsData?.data;
 
   const isLoading = loadingRecords || loadingStats;
 
-  // ── Derived data ────────────────────────────────────────────────────────────
   const timeData     = useMemo(() => groupByTime(records, gran), [records, gran]);
   const categoryData = useMemo(() => groupByCategory(records), [records]);
   const fromData     = useMemo(() => groupByOffice(records, "fromOffice"), [records]);
@@ -195,7 +191,6 @@ export default function Analytics() {
     { name: "Outgoing", value: stats?.outgoing ?? 0, color: C.cyan },
   ], [stats]);
 
-  // Avg processing time in hours (created → received)
   const avgProcHours = useMemo(() => {
     const withReceived = records.filter(r => r.receivedAt);
     if (!withReceived.length) return null;
@@ -227,7 +222,6 @@ export default function Analytics() {
           </p>
         </div>
 
-        {/* Granularity toggle */}
         <div className="flex gap-2 bg-gray-900/60 border border-white/8 rounded-xl p-1.5 backdrop-blur-sm">
           {(["day", "week", "month"] as Granularity[]).map(g => (
             <button
@@ -266,7 +260,7 @@ export default function Analytics() {
         ))}
       </div>
 
-      {/* ── Volume over time (Area) ── */}
+      {/* ── Volume over time ── */}
       <Card>
         <CardHeader
           title="Volume Over Time"
@@ -291,7 +285,7 @@ export default function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                 <XAxis dataKey="key" tick={AXIS_STYLE} axisLine={false} tickLine={false} />
                 <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.1)", strokeWidth: 1 }} />
                 <Legend wrapperStyle={{ fontSize: 11, color: "#9ca3af", paddingTop: 12 }} />
                 <Area type="monotone" dataKey="incoming" name="Incoming" stroke={C.purple} strokeWidth={2} fill="url(#gIncoming)" dot={false} />
                 <Area type="monotone" dataKey="outgoing" name="Outgoing" stroke={C.cyan}   strokeWidth={2} fill="url(#gOutgoing)" dot={false} />
@@ -301,10 +295,8 @@ export default function Analytics() {
         </div>
       </Card>
 
-      {/* ── Row: Status pie + Type pie ── */}
+      {/* ── Status pie + Type pie ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        {/* Status distribution */}
         <Card>
           <CardHeader title="Status Distribution" sub="Pending · Received · Released" />
           <div className="p-6 bg-gradient-to-br from-white/[0.01] to-transparent flex flex-col sm:flex-row items-center gap-8">
@@ -328,7 +320,7 @@ export default function Analytics() {
                     <span className="text-white font-bold tabular-nums">{value}</span>
                   </div>
                   <div className="w-full h-2 bg-gray-900/60 rounded-full overflow-hidden border border-white/5 group-hover:border-white/10 transition-colors duration-300">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: total > 0 ? `${(value / total) * 100}%` : "0%", background: color, boxShadow: `inset 0 1px 2px rgba(0,0,0,0.3)` }} />
+                    <div className="h-full rounded-full transition-all duration-700" style={{ width: total > 0 ? `${(value / total) * 100}%` : "0%", background: color }} />
                   </div>
                 </div>
               ))}
@@ -336,7 +328,6 @@ export default function Analytics() {
           </div>
         </Card>
 
-        {/* Type distribution */}
         <Card>
           <CardHeader title="Type Distribution" sub="Incoming vs Outgoing" />
           <div className="p-6 bg-gradient-to-br from-white/[0.01] to-transparent flex flex-col sm:flex-row items-center gap-8">
@@ -365,16 +356,15 @@ export default function Analytics() {
                     </div>
                   </div>
                   <div className="w-full h-2 bg-gray-900/60 rounded-full overflow-hidden border border-white/5 group-hover:border-white/10 transition-colors duration-300">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: total > 0 ? `${(value / total) * 100}%` : "0%", background: color, boxShadow: `inset 0 1px 2px rgba(0,0,0,0.3)` }} />
+                    <div className="h-full rounded-full transition-all duration-700" style={{ width: total > 0 ? `${(value / total) * 100}%` : "0%", background: color }} />
                   </div>
                 </div>
               ))}
-              {/* Split bar */}
               <div className="pt-3 border-t border-white/10">
                 <p className="text-gray-600 text-xs mb-3 uppercase tracking-widest font-semibold text-blue-300/70">Distribution</p>
-                <div className="flex h-2.5 rounded-full overflow-hidden gap-1" style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.5)" }}>
+                <div className="flex h-2.5 rounded-full overflow-hidden gap-1">
                   {typePie.map(({ name, value, color }) => (
-                    <div key={name} className="transition-all duration-700 rounded-full" style={{ width: total > 0 ? `${(value / total) * 100}%` : "50%", background: color, boxShadow: `0 0 12px ${color}40` }} />
+                    <div key={name} className="transition-all duration-700 rounded-full" style={{ width: total > 0 ? `${(value / total) * 100}%` : "50%", background: color }} />
                   ))}
                 </div>
               </div>
@@ -383,7 +373,7 @@ export default function Analytics() {
         </Card>
       </div>
 
-      {/* ── Row: Category bar + Processing time bar ── */}
+      {/* ── Category bar + Processing time bar ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Category breakdown */}
@@ -392,13 +382,16 @@ export default function Analytics() {
           <div className="p-6 bg-gradient-to-br from-white/[0.01] to-transparent">
             {categoryData.length === 0 ? <EmptyChart /> : (
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={categoryData} layout="vertical"
-                  margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+                <BarChart
+                  data={categoryData}
+                  layout="vertical"
+                  margin={{ top: 0, right: 24, left: 0, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
                   <XAxis type="number" tick={AXIS_STYLE} axisLine={false} tickLine={false} allowDecimals={false} />
                   <YAxis type="category" dataKey="name" tick={AXIS_STYLE} axisLine={false} tickLine={false} width={80} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="value" name="Records" radius={[0, 6, 6, 0]} maxBarSize={18}>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                  <Bar dataKey="value" name="Records" radius={[0, 6, 6, 0]} maxBarSize={18} background={{ fill: "transparent" }}>
                     {categoryData.map((_, i) => (
                       <Cell key={i} fill={COLORS_PIE[i % COLORS_PIE.length]} />
                     ))}
@@ -409,12 +402,9 @@ export default function Analytics() {
           </div>
         </Card>
 
-        {/* Processing time distribution */}
+        {/* Processing time */}
         <Card>
-          <CardHeader
-            title="Processing Time"
-            sub="Days from submitted → received"
-          />
+          <CardHeader title="Processing Time" sub="Days from submitted → received" />
           <div className="p-6 bg-gradient-to-br from-white/[0.01] to-transparent">
             {procData.every(d => d.value === 0) ? <EmptyChart label="No received records yet" /> : (
               <ResponsiveContainer width="100%" height={220}>
@@ -422,8 +412,8 @@ export default function Analytics() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis dataKey="name" tick={AXIS_STYLE} axisLine={false} tickLine={false} />
                   <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="value" name="Records" radius={[6, 6, 0, 0]} maxBarSize={36}>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                  <Bar dataKey="value" name="Records" radius={[6, 6, 0, 0]} maxBarSize={36} background={{ fill: "transparent" }}>
                     {procData.map((_, i) => (
                       <Cell key={i} fill={[C.emerald, C.blue, C.amber, C.rose, "#ef4444"][i]} />
                     ))}
@@ -435,25 +425,25 @@ export default function Analytics() {
         </Card>
       </div>
 
-      {/* ── Row: From Office + To Office ── */}
+      {/* ── From Office + To Office ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <OfficeRankCard title="Top Sending Offices" sub="Most active 'From' offices" data={fromData} />
-        <OfficeRankCard title="Top Receiving Offices" sub="Most active 'To' offices" data={toData} color={C.cyan} />
+        <OfficeRankCard title="Top Sending Offices"   sub="Most active 'From' offices" data={fromData} />
+        <OfficeRankCard title="Top Receiving Offices" sub="Most active 'To' offices"   data={toData}   color={C.cyan} />
       </div>
 
-      {/* ── Quick stats footer ── */}
+      {/* ── Summary footer ── */}
       <Card>
         <CardHeader title="Summary Metrics" sub="Key performance indicators" />
         <div className="p-6 bg-gradient-to-br from-white/[0.01] to-transparent grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
-            { label: "Total",     value: total,                icon: FaFileAlt,     color: C.blue },
-            { label: "Incoming",  value: stats?.incoming ?? 0, icon: FaInbox,       color: C.purple },
-            { label: "Outgoing",  value: stats?.outgoing ?? 0, icon: FaShare,       color: C.cyan },
-            { label: "Pending",   value: stats?.pending  ?? 0, icon: FaClock,       color: C.amber },
-            { label: "Received",  value: stats?.received ?? 0, icon: FaCheckCircle, color: C.blue },
-            { label: "Released",  value: stats?.released ?? 0, icon: FaBoxOpen,     color: C.emerald },
+            { label: "Total",    value: total,                icon: FaFileAlt,     color: C.blue },
+            { label: "Incoming", value: stats?.incoming ?? 0, icon: FaInbox,       color: C.purple },
+            { label: "Outgoing", value: stats?.outgoing ?? 0, icon: FaShare,       color: C.cyan },
+            { label: "Pending",  value: stats?.pending  ?? 0, icon: FaClock,       color: C.amber },
+            { label: "Received", value: stats?.received ?? 0, icon: FaCheckCircle, color: C.blue },
+            { label: "Released", value: stats?.released ?? 0, icon: FaBoxOpen,     color: C.emerald },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="text-center p-4 rounded-xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] border border-white/8 hover:border-white/15 hover:bg-gradient-to-br hover:from-white/[0.08] hover:to-white/[0.02] transition-all duration-300 group">
+            <div key={label} className="text-center p-4 rounded-xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] border border-white/8 hover:border-white/15 transition-all duration-300 group">
               <div className="flex justify-center mb-3">
                 <Icon size={16} className="group-hover:scale-110 transition-transform duration-300" style={{ color }} />
               </div>
@@ -492,7 +482,7 @@ function OfficeRankCard({
                 <span className="text-white font-bold ml-2 shrink-0 tabular-nums">{value}</span>
               </div>
               <div className="w-full h-1.5 bg-gray-900/60 rounded-full overflow-hidden border border-white/5 group-hover:border-white/10 transition-colors duration-300">
-                <div className="h-full rounded-full transition-all duration-700 shadow-lg" style={{ width: `${(value / max) * 100}%`, background: color, boxShadow: `0 0 12px ${color}40` }} />
+                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(value / max) * 100}%`, background: color }} />
               </div>
             </div>
           ))
