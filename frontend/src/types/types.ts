@@ -34,6 +34,8 @@ export interface Record {
   receiverSignature?:  string;
   processedById?:     string;
   processedBy?:       { id: string; name: string; username: string };
+  isArchived:         boolean;
+  archivedAt?:        string;
   isDeleted:          boolean;
   createdAt:          string;
   updatedAt:          string;
@@ -58,6 +60,7 @@ export interface RecordStats {
   pending:       number;
   received:      number;
   released:      number;
+  archived:      number;
   todayCount:    number;
   weekCount:     number;
   recentRecords: Record[];

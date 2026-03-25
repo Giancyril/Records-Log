@@ -8,6 +8,7 @@ import LoginPage       from "./pages/login/Login";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import OverviewPage    from "./pages/dashboard/Overview";
 import RecordsPage     from "./pages/records/RecordsPage";
+import ArchivePage     from "./pages/records/ArchivePage";
 import NewRecordPage   from "./pages/records/NewRecord";
 import RecordDetail    from "./pages/records/RecordDetail";
 import ActivityPage    from "./pages/activity/ActivityLogsPage";
@@ -41,6 +42,7 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard"          element={<OverviewPage />} />
             <Route path="records"            element={<RecordsPage />} />
+            <Route path="archive"            element={<ArchivePage />} />
             <Route path="records/new"        element={<NewRecordPage />} />
             <Route path="records/:id"        element={<RecordDetail />} />
             <Route path="activity-logs"      element={<ActivityPage />} />

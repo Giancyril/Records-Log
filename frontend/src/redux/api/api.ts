@@ -66,6 +66,18 @@ const api = baseApi.injectEndpoints({
       query: (body: { ids: string[] }) => ({ url: "/records/bulk-delete", method: "DELETE", body }),
       invalidatesTags: ["records", "stats"],
     }),
+    archiveRecord: build.mutation({
+      query: (id: string) => ({ url: `/records/${id}/archive`, method: "PUT" }),
+      invalidatesTags: ["records", "stats"],
+    }),
+    unarchiveRecord: build.mutation({
+      query: (id: string) => ({ url: `/records/${id}/unarchive`, method: "PUT" }),
+      invalidatesTags: ["records", "stats"],
+    }),
+    bulkCreateRecords: build.mutation({
+      query: (body: any[]) => ({ url: "/records/bulk", method: "POST", body }),
+      invalidatesTags: ["records", "stats"],
+    }),
 
     // ── Activity Logs ─────────────────────────────────────────────────────
     getActivityLogs: build.query({
@@ -96,6 +108,9 @@ export const {
   useReleaseRecordMutation,
   useDeleteRecordMutation,
   useBulkDeleteRecordsMutation,
+  useArchiveRecordMutation,
+  useUnarchiveRecordMutation,
+  useBulkCreateRecordsMutation,
   useGetActivityLogsQuery,
   useClearActivityLogsMutation,
 } = api;

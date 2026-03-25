@@ -1,20 +1,26 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useGetRecordsQuery, useDeleteRecordMutation, useBulkDeleteRecordsMutation } from "../../redux/api/api";
+import { 
+  useGetRecordsQuery, 
+  useDeleteRecordMutation, 
+  useBulkDeleteRecordsMutation,
+  useArchiveRecordMutation,
+  useBulkCreateRecordsMutation
+} from "../../redux/api/api";
 import { toast } from "react-toastify";
 import {
   FaPlus, FaSearch, FaTrash, FaEye, FaFileAlt, FaTimes,
-  FaCheckSquare, FaSquare, FaFilter, FaDownload,
-  FaInbox, FaPaperPlane
+  FaCheckSquare, FaSquare, FaFilter, FaDownload, FaFileUpload,
+  FaBox
 } from "react-icons/fa";
 import type { Record as Rec } from "../../types/types";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useConfirm } from "../../hooks/useConfirm";
 
 const TYPE_TABS = [
-  { label: "All Records", value: "", icon: FaFileAlt },
-  { label: "Incoming", value: "INCOMING", icon: FaInbox },
-  { label: "Outgoing", value: "OUTGOING", icon: FaPaperPlane }
+  { label: "All Records", value: "" },
+  { label: "Incoming", value: "INCOMING" },
+  { label: "Outgoing", value: "OUTGOING" }
 ];
 const STATUS_TABS = [{ label: "All", value: "" }, { label: "Pending", value: "PENDING" }, { label: "Received", value: "RECEIVED" }, { label: "Released", value: "RELEASED" }];
 
@@ -60,6 +66,8 @@ export default function RecordsPage() {
 
   const [deleteRecord] = useDeleteRecordMutation();
   const [bulkDelete, { isLoading: bulkDeleting }] = useBulkDeleteRecordsMutation();
+  const [archiveRecord] = useArchiveRecordMutation();
+  const [bulkCreate, { isLoading: importing }] = useBulkCreateRecordsMutation();
 
   const { data, isLoading } = useGetRecordsQuery({
     search, type, status, page, limit: 12,
@@ -93,6 +101,70 @@ export default function RecordsPage() {
     } catch (err: any) { toast.error(err?.data?.message ?? "Bulk delete failed"); }
   };
 
+  const handleArchive = async (r: Rec) => {
+    const ok = await confirm({ title: "Archive Record", message: `Move "${r.documentTitle}" to archive?`, confirmText: "Archive", variant: "info" });
+    if (!ok) return;
+    try {
+      await archiveRecord(r.id).unwrap();
+      toast.success("Record archived");
+    } catch (err: any) { toast.error(err?.data?.message ?? "Failed to archive"); }
+  };
+
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.split("\n").filter(l => l.trim());
+        if (lines.length < 2) return toast.error("CSV is empty or invalid");
+
+        const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
+        const rows = lines.slice(1);
+
+        const recordsToCreate = rows.map(line => {
+          const values = line.split(",").map(v => v.trim().replace(/^"|"$/g, ""));
+          const obj: any = {};
+          headers.forEach((h, i) => {
+            const val = values[i];
+            // Map common CSV headers to backend fields
+            if (h.toLowerCase() === "title") obj.documentTitle = val;
+            if (h.toLowerCase() === "number") obj.documentNumber = val;
+            if (h.toLowerCase() === "type") obj.type = val?.toUpperCase();
+            if (h.toLowerCase() === "person") obj.personName = val;
+            if (h.toLowerCase() === "email") obj.personEmail = val;
+            if (h.toLowerCase() === "department") obj.personDepartment = val;
+            if (h.toLowerCase() === "position") obj.personPosition = val;
+            if (h.toLowerCase() === "office from") obj.fromOffice = val;
+            if (h.toLowerCase() === "office to") obj.toOffice = val;
+            if (h.toLowerCase() === "subject") obj.subject = val;
+            if (h.toLowerCase() === "particulars") obj.particulars = val;
+            if (h.toLowerCase() === "category") obj.category = val;
+            if (h.toLowerCase() === "date") obj.documentDate = val;
+            if (h.toLowerCase() === "remarks") obj.remarks = val;
+          });
+
+          // Ensure defaults for required fields
+          if (!obj.type) obj.type = "INCOMING";
+          if (!obj.documentDate) obj.documentDate = new Date().toISOString();
+          if (!obj.submitterSignature) obj.submitterSignature = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+          
+          return obj;
+        }).filter(r => r.documentTitle && r.personName);
+
+        if (recordsToCreate.length === 0) return toast.error("No valid records found in CSV");
+
+        await bulkCreate(recordsToCreate).unwrap();
+        toast.success(`Successfully imported ${recordsToCreate.length} records`);
+      } catch (err: any) {
+        toast.error(err?.data?.message ?? "Failed to import CSV");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="space-y-5">
       <ConfirmDialog isOpen={isOpen} title={options.title} message={options.message}
@@ -107,9 +179,14 @@ export default function RecordsPage() {
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <button onClick={() => exportCSV(records)}
-            className="w-8 h-8 sm:w-auto sm:h-auto inline-flex items-center justify-center gap-1.5 sm:px-3 sm:py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-semibold rounded-xl transition-all">
+            className="w-8 h-8 sm:w-auto sm:h-auto inline-flex items-center justify-center gap-1.5 sm:px-3 sm:py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-semibold rounded-xl transition-all"
+            title="Export CSV">
             <FaDownload size={11} /><span className="hidden sm:inline">Export</span>
           </button>
+          <label className="w-8 h-8 sm:w-auto sm:h-auto inline-flex items-center justify-center gap-1.5 sm:px-3 sm:py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-semibold rounded-xl transition-all cursor-pointer" title="Import CSV">
+            <FaFileUpload size={11} /><span className="hidden sm:inline">{importing ? "Importing..." : "Import"}</span>
+            <input type="file" accept=".csv" className="hidden" onChange={handleImportCSV} disabled={importing} />
+          </label>
           <button onClick={() => setShowFilters(f => !f)}
             className={`w-8 h-8 inline-flex items-center justify-center rounded-xl border text-xs transition-all ${showFilters || hasFilters ? "bg-blue-600/20 border-blue-500/30 text-blue-400" : "bg-gray-800 hover:bg-gray-700 border-white/5 text-gray-300"}`}>
             <FaFilter size={10} />
@@ -161,11 +238,10 @@ export default function RecordsPage() {
       )}
 
       {/* Primary Categories (Type) */}
-      <div className="flex gap-1.5 p-1 bg-gray-900 border border-white/5 rounded-2xl w-fit max-w-full overflow-x-auto no-scrollbar shadow-xl shadow-black/20">
-        {TYPE_TABS.map(({ label, value, icon: Icon }) => (
+      <div className="flex gap-1.5 p-1 bg-gray-900 border border-white/5 rounded-2xl w-full sm:w-fit overflow-x-auto no-scrollbar shadow-xl shadow-black/20">
+        {TYPE_TABS.map(({ label, value }) => (
           <button key={value} onClick={() => { setType(value); setPage(1); }}
-            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${type === value ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
-            <Icon size={13} className={type === value ? "text-white" : "text-gray-500"} />
+            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${type === value ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
             {label}
           </button>
         ))}
@@ -182,14 +258,14 @@ export default function RecordsPage() {
         </div>
 
         {/* Status Chips (Secondary) */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-          <div className="flex items-center gap-1.5 px-2 text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
-            <FaFilter size={9} className="text-gray-600" /> Refine
+        <div className="flex items-center gap-2 py-1 w-full overflow-hidden">
+          <div className="hidden sm:flex items-center gap-1.5 px-2 text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
+            Refine
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar w-full">
             {STATUS_TABS.map(({ label, value }) => (
               <button key={value} onClick={() => { setStatus(value); setPage(1); }}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${status === value ? "bg-blue-600/15 text-blue-400 border-blue-500/30" : "bg-gray-900 border-white/5 text-gray-500 hover:text-white hover:bg-white/5"}`}>
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border shrink-0 whitespace-nowrap ${status === value ? "bg-blue-600/15 text-blue-400 border-blue-500/30" : "bg-gray-900 border-white/5 text-gray-500 hover:text-white hover:bg-white/5"}`}>
                 {label}
               </button>
             ))}
@@ -252,6 +328,11 @@ export default function RecordsPage() {
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_COLOR[r.status]}`}>{r.status}</span>
                   </div>
                   <div className="col-span-1 flex items-center justify-end gap-1.5">
+                    <button onClick={() => handleArchive(r)}
+                      className="w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 transition-colors"
+                      title="Archive">
+                      <FaBox size={11} />
+                    </button>
                     <Link to={`/records/${r.id}`}
                       className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center text-blue-400 transition-colors">
                       <FaEye size={11} />
@@ -280,6 +361,9 @@ export default function RecordsPage() {
                           </div>
                         </div>
                         <div className="flex gap-1.5 shrink-0">
+                          <button onClick={() => handleArchive(r)} className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <FaBox size={12} />
+                          </button>
                           <Link to={`/records/${r.id}`} className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                             <FaEye size={12} />
                           </Link>

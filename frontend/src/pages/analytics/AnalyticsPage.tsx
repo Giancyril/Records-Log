@@ -57,7 +57,7 @@ type Granularity = "day" | "week" | "month";
 
 function groupByTime(records: Doc[], gran: Granularity) {
   const keyFn = gran === "month" ? monthKey : gran === "week" ? weekKey : dayKey;
-  const map = new Map<string, { key: string; incoming: number; outgoing: number; total: number }>();
+  const map = new Map<string, { key: string; incoming: number; outgoing: number; total: number; growth?: number }>();
   records.forEach(r => {
     const k = keyFn(r.createdAt);
     if (!map.has(k)) map.set(k, { key: k, incoming: 0, outgoing: 0, total: 0 });
@@ -65,7 +65,15 @@ function groupByTime(records: Doc[], gran: Granularity) {
     e.total++;
     r.type === "INCOMING" ? e.incoming++ : e.outgoing++;
   });
-  return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key)).slice(-24);
+  
+  const sorted = Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key));
+  // Calculate growth
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1].total;
+    if (prev > 0) sorted[i].growth = Math.round(((sorted[i].total - prev) / prev) * 100);
+    else sorted[i].growth = 0;
+  }
+  return sorted.slice(-24);
 }
 
 function groupByCategory(records: Doc[]) {
@@ -242,10 +250,10 @@ export default function Analytics() {
       {/* ── KPI row ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Records",   value: total,                      icon: FaFileAlt,     color: C.blue,    bg: "from-blue-500/20 to-blue-500/5" },
-          { label: "Receive Rate",    value: `${receiveRate}%`,          icon: FaCheckCircle, color: C.emerald, bg: "from-emerald-500/20 to-emerald-500/5" },
-          { label: "Avg. Process",    value: avgProcHours != null ? `${avgProcHours}h` : "—", icon: FaClock, color: C.amber, bg: "from-amber-500/20 to-amber-500/5" },
-          { label: "Added This Week", value: stats?.weekCount ?? 0,      icon: FaChartBar,    color: C.purple,  bg: "from-purple-500/20 to-purple-500/5" },
+          { label: "Total Active",     value: total,                      icon: FaFileAlt,     color: C.blue,    bg: "from-blue-500/20 to-blue-500/5", subValue: `${receiveRate}% RCV Rate` },
+          { label: "Archived",         value: stats?.archived ?? 0,       icon: FaBoxOpen,    color: C.rose,    bg: "from-rose-500/20 to-rose-500/5" },
+          { label: "Avg. Process",     value: avgProcHours != null ? `${avgProcHours}h` : "—", icon: FaClock, color: C.amber, bg: "from-amber-500/20 to-amber-500/5" },
+          { label: "Added This Week",  value: stats?.weekCount ?? 0,      icon: FaChartBar,    color: C.purple,  bg: "from-purple-500/20 to-purple-500/5" },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className={`bg-gradient-to-br ${bg} border border-white/10 rounded-2xl p-5 shadow-lg hover:shadow-xl hover:border-white/20 transition-all duration-300 group`}>
             <div className="flex items-center justify-between mb-4">
@@ -254,46 +262,67 @@ export default function Analytics() {
                 <Icon size={14} style={{ color }} />
               </div>
             </div>
-            <p className="text-4xl font-bold tracking-tight" style={{ color }}>{value}</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-4xl font-bold tracking-tight" style={{ color }}>{value}</p>
+              {"subValue" in (label === "Total Active" ? {subValue: `${receiveRate}% RCV Rate`} : {}) && (
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{label === "Total Active" ? `${receiveRate}% Recv` : ""}</span>
+              )}
+            </div>
             <div className="h-1 w-12 mt-3 rounded-full" style={{ background: color, opacity: 0.3 }}></div>
           </div>
         ))}
       </div>
 
-      {/* ── Volume over time ── */}
-      <Card>
-        <CardHeader
-          title="Volume Over Time"
-          sub={`Records created — grouped by ${gran}`}
-        />
-        <div className="p-6 bg-gradient-to-br from-white/[0.01] to-transparent">
-          {timeData.length === 0 ? (
-            <EmptyChart />
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={timeData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gIncoming" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.purple} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={C.purple} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gOutgoing" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.cyan} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={C.cyan} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="key" tick={AXIS_STYLE} axisLine={false} tickLine={false} />
-                <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.1)", strokeWidth: 1 }} />
-                <Legend wrapperStyle={{ fontSize: 11, color: "#9ca3af", paddingTop: 12 }} />
-                <Area type="monotone" dataKey="incoming" name="Incoming" stroke={C.purple} strokeWidth={2} fill="url(#gIncoming)" dot={false} />
-                <Area type="monotone" dataKey="outgoing" name="Outgoing" stroke={C.cyan}   strokeWidth={2} fill="url(#gOutgoing)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </Card>
+      {/* ── Volume + Growth ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
+          <CardHeader title="Volume Over Time" sub={`Records created — grouped by ${gran}`} />
+          <div className="p-6 bg-gradient-to-br from-white/[0.01] to-transparent">
+            {timeData.length === 0 ? <EmptyChart /> : (
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={timeData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gIncoming" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor={C.purple} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={C.purple} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gOutgoing" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor={C.cyan} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={C.cyan} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <XAxis dataKey="key" tick={AXIS_STYLE} axisLine={false} tickLine={false} />
+                  <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.1)", strokeWidth: 1 }} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: "#9ca3af", paddingTop: 12 }} />
+                  <Area type="monotone" dataKey="incoming" name="Incoming" stroke={C.purple} strokeWidth={2} fill="url(#gIncoming)" dot={false} />
+                  <Area type="monotone" dataKey="outgoing" name="Outgoing" stroke={C.cyan}   strokeWidth={2} fill="url(#gOutgoing)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Period Growth" sub={`Trend compared to previous ${gran}`} />
+          <div className="p-6 bg-gradient-to-br from-white/[0.01] to-transparent">
+            {timeData.length === 0 ? <EmptyChart /> : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={timeData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <XAxis dataKey="key" tick={AXIS_STYLE} axisLine={false} tickLine={false} />
+                  <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="growth" name="Growth %" radius={[6, 6, 0, 0]} maxBarSize={24}>
+                    {timeData.map((d, i) => <Cell key={i} fill={(d.growth ?? 0) >= 0 ? C.emerald : C.rose} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+      </div>
 
       {/* ── Status pie + Type pie ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
