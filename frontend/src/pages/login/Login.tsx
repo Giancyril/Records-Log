@@ -124,7 +124,7 @@ export default function Login() {
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email Address</label>
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  required disabled={isLocked} placeholder="admin@nbsc.edu.ph"
+                  required disabled={isLocked} placeholder=" "
                   className="w-full bg-gray-800/60 border border-white/[0.08] hover:border-white/[0.12] focus:border-blue-500/50 text-white placeholder-gray-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-sm disabled:opacity-40"
                 />
               </div>

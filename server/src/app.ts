@@ -15,7 +15,7 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
 ].filter(Boolean) as string[];
 
-app.use(cors({
+app.options("*", cors({
   origin:         allowedOrigins,
   credentials:    true,
   methods:        ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],

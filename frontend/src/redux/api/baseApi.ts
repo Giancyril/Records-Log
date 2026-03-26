@@ -6,7 +6,11 @@ export const baseApi = createApi({
   refetchOnFocus: true,
   refetchOnReconnect: true,
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5002/api",
+    baseUrl: (() => {
+      const url = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "http://localhost:5002/api";
+      console.log("Network Debug - Base URL:", url);
+      return url;
+    })(),
     prepareHeaders: (headers) => {
       const token = getToken();
       if (token) headers.set("authorization", token);

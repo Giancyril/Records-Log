@@ -27,7 +27,11 @@ export default function App() {
     window.addEventListener("resize", handler);
 
     // Keep server awake
-    const ping = () => fetch("http://localhost:5002/").catch(() => {});
+    const ping = () => {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5002";
+      console.log("Ping Debug - URL:", apiUrl);
+      fetch(apiUrl).catch(() => {});
+    };
     ping();
     const interval = setInterval(ping, 10 * 60 * 1000);
     return () => { window.removeEventListener("resize", handler); clearInterval(interval); };
