@@ -15,14 +15,17 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
 ].filter(Boolean) as string[];
 
-app.options("*", cors({
+const corsOptions = {
   origin:         allowedOrigins,
   credentials:    true,
   methods:        ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "authorization"],
-}));
+};
 
-app.options("*", cors());
+// Apply CORS first — before anything else including error handlers
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
@@ -31,7 +34,13 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 app.use("/api", router);
-app.use(errorHandler);
+
+// Error handler — must also send CORS headers so the frontend can read the error
+app.use((err: any, req: Request, res: Response, next: any) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Credentials", "true");
+  errorHandler(err, req, res, next);
+});
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ success: false, statusCode: 404, message: "Route not found." });
