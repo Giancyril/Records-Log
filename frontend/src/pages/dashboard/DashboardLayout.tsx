@@ -20,7 +20,6 @@ const NAV = [
 // parent re-renders — remounting was breaking NavLink click events on mobile.
 function SidebarContent({
   onNavigate,
-  
 }: {
   userName: string;
   userEmail: string;
@@ -45,10 +44,6 @@ function SidebarContent({
                 if (fb) fb.style.display = "flex";
               }}
             />
-            <span
-              className="text-blue-400 text-xs font-black select-none w-full h-full items-center justify-center"
-              style={{ display: "none" }}
-            >N</span>
           </div>
           <div className="min-w-0">
             <p className="text-white text-sm font-bold tracking-widest">NBSC SAS</p>
@@ -65,9 +60,10 @@ function SidebarContent({
             to={to}
             onClick={onNavigate}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive
-                ? "bg-blue-600/15 text-blue-400 border border-blue-500/20"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+                isActive
+                  ? "bg-blue-600/15 text-blue-400 border-blue-500/20"
+                  : "text-gray-400 border-transparent hover:text-white hover:bg-white/5"
               }`
             }
           >
@@ -76,10 +72,7 @@ function SidebarContent({
           </NavLink>
         ))}
       </nav>
-
-      
-      </div>
-    
+    </div>
   );
 }
 

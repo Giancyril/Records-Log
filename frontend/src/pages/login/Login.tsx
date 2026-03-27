@@ -108,8 +108,9 @@ export default function Login() {
                 
               </div>
               <div>
-                <h1 className="text-white font-bold text-base leading-tight tracking-tight">NBSC SAS</h1>
-                <p className="text-gray-500 text-[11px] tracking-widest uppercase mt-0.5">Records Log</p>
+                <h1 className="text-white font-bold text-base leading-tight tracking-wider">
+                  NBSC SAS</h1>
+                <p className="text-gray-500 text-[11px] tracking-wider uppercase mt-0.5">Records Log</p>
               </div>
             </div>
             <div className="text-center">
