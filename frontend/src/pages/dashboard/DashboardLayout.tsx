@@ -125,33 +125,45 @@ export default function DashboardLayout() {
         />
       </aside>
 
-      {/* Mobile drawer overlay */}
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          {/* Dim backdrop */}
-          <div
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setSidebarOpen(false)}
-          />
+      {/* Mobile drawer overlay - Always in DOM for smooth transition */}
+      <div 
+        className={`lg:hidden fixed inset-0 z-50 flex transition-visibility duration-300 ${
+          sidebarOpen ? "visible" : "invisible"
+        }`}
+      >
+        {/* Dim backdrop */}
+        <div
+          className={`absolute inset-0 bg-black/70 transition-opacity duration-300 ease-in-out ${
+            sidebarOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setSidebarOpen(false)}
+        />
 
-          {/* Drawer */}
-          <aside className="relative z-10 w-64 max-w-[82vw] h-full bg-gray-900 border-r border-white/5 flex flex-col shadow-2xl">
-{/* Mobile Close Button */}
-          <button onClick={() => setSidebarOpen(false)}
-            className="absolute top-3 right-3 z-20 lg:hidden w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white transition-colors">
+        {/* Drawer */}
+        <aside 
+          className={`relative z-10 w-64 max-w-[82vw] h-full bg-gray-900 border-r border-white/5 flex flex-col shadow-2xl transform transition-transform duration-300 ease-in-out ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          {/* Mobile Close Button */}
+          <button 
+            onClick={() => setSidebarOpen(false)}
+            className={`absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white transition-all duration-300 ${
+              sidebarOpen ? "opacity-100 delay-200" : "opacity-0"
+            }`}
+          >
             <FaTimes size={16} />
           </button>
 
-            <SidebarContent
-              userName={userName}
-              userEmail={userEmail}
-              initial={initial}
-              onNavigate={() => setSidebarOpen(false)}
-              onSignOut={() => { setSidebarOpen(false); handleSignOut(); }}
-            />
-          </aside>
-        </div>
-      )}
+          <SidebarContent
+            userName={userName}
+            userEmail={userEmail}
+            initial={initial}
+            onNavigate={() => setSidebarOpen(false)}
+            onSignOut={() => { setSidebarOpen(false); handleSignOut(); }}
+          />
+        </aside>
+      </div>
 
       {/* Main */}
       <div className="flex-1 lg:ml-56 flex flex-col min-h-screen min-w-0">
