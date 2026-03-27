@@ -237,36 +237,67 @@ export default function RecordsPage() {
         </div>
       )}
 
-      {/* Primary Categories (Type) */}
-      <div className="flex gap-1.5 p-1 bg-gray-900 border border-white/5 rounded-2xl w-full shadow-xl shadow-black/20">
-        {TYPE_TABS.map(({ label, value }) => (
-          <button key={value} onClick={() => { setType(value); setPage(1); }}
-            className={`flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center ${type === value ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Search + Secondary Filters */}
-      <div className="space-y-3">
-        <div className="relative">
-          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={12} />
-          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search records..."
-            className="w-full pl-10 pr-10 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" />
-          {search && <button onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><FaTimes size={11} /></button>}
+      {/* Primary Categories (Type) - Optimized for Mobile */}
+        <div className="flex p-1 sm:p-1.5 bg-gray-900/50 backdrop-blur-md border border-white/5 rounded-xl sm:rounded-2xl w-full shadow-2xl shadow-black/40">
+          {TYPE_TABS.map(({ label, value }) => {
+            const isActive = type === value;
+            return (
+              <button
+                key={value}
+                onClick={() => { setType(value); setPage(1); }}
+                className={`relative flex-1 px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-[12px] text-[10px] sm:text-[11px] uppercase tracking-wider font-bold transition-all duration-300 flex items-center justify-center ${
+                  isActive
+                    ? "bg-blue-600 text-white shadow-lg ring-1 ring-white/10"
+                    : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Status Chips (Secondary) */}
-        <div className="flex gap-1.5 w-full py-1">
-          {STATUS_TABS.map(({ label, value }) => (
-            <button key={value} onClick={() => { setStatus(value); setPage(1); }}
-              className={`flex-1 min-w-0 px-1 sm:px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all border flex items-center justify-center whitespace-nowrap shrink ${status === value ? "bg-blue-600 border-blue-500/30 text-white" : "bg-gray-900 border-white/5 text-gray-400 hover:text-white hover:bg-white/5"}`}>
-              {label}
-            </button>
-          ))}
+        {/* Search + Secondary Filters Container */}
+        <div className="flex flex-col lg:flex-row gap-3 items-center w-full mt-4">
+          
+          {/* Search Bar - Grows to fill space on desktop, full width on mobile */}
+          <div className="relative w-full lg:flex-1 group">
+            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={11} />
+            <input 
+              value={search} 
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              placeholder="Search records..."
+              className="w-full pl-10 pr-10 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-xs sm:text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-inner" 
+            />
+            {search && (
+              <button onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
+                <FaTimes size={10} />
+              </button>
+            )}
+          </div>
+
+          {/* Status Chips - Fills width on mobile, Right-justified on desktop */}
+          <div className="w-full lg:w-auto">
+            <div className="flex gap-2 w-full lg:justify-end overflow-x-auto no-scrollbar py-1">
+              {STATUS_TABS.map(({ label, value }) => {
+                const isActive = status === value;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => { setStatus(value); setPage(1); }}
+                    className={`flex-1 lg:flex-none px-5 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-200 border whitespace-nowrap flex items-center justify-center shrink-0 ${
+                      isActive
+                        ? "bg-blue-600/10 border-blue-500/40 text-blue-400 shadow-lg shadow-blue-500/5"
+                        : "bg-gray-900/40 border-white/5 text-gray-500 hover:border-white/10 hover:text-gray-300"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
 
       {/* Table */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-x-auto">
