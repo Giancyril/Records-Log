@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTrackRecordQuery } from "../../redux/api/api";
-import { FaSearch, FaCheck, FaFileAlt, FaClock } from "react-icons/fa";
+import { FaSearch, FaCheck, FaClock } from "react-icons/fa";
 import type { TrackedRecord } from "../../types/types";
 
 const STATUS_CONFIG = {
@@ -138,16 +138,13 @@ export default function TrackRecordPage() {
   };
 
   return (
-    <section className="min-h-screen bg-gray-950 flex flex-col items-center justify-start py-12 px-4"
-      style={{ backgroundImage: "radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 60%)" }}>
+    <section className="flex flex-col items-center justify-start py-6 px-4">
 
       <div className="w-full max-w-lg mx-auto space-y-6">
 
         {/* Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600/15 border border-blue-500/25 mb-4">
-            <FaFileAlt size={18} className="text-blue-400" />
-          </div>
+          
           <h1 className="text-white text-2xl font-bold tracking-tight">Track Your Document</h1>
           <p className="text-gray-500 text-sm mt-1.5 max-w-sm mx-auto">
             Enter your tracking code to check the current status of your submitted document.
@@ -156,17 +153,17 @@ export default function TrackRecordPage() {
 
         {/* Search form */}
         <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="relative flex-1">
-            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={12} />
+          <div className="relative flex-1 group">
+            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={11} />
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="e.g. clx1a2b3c4d5e6f7g8h9..."
-              className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-white/8 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-xs sm:text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
             />
           </div>
           <button type="submit"
-            className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all whitespace-nowrap">
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all whitespace-nowrap shadow-lg shadow-blue-500/10">
             Track
           </button>
         </form>
@@ -200,8 +197,7 @@ export default function TrackRecordPage() {
         {!trackingCode && (
           <div className="bg-gray-900/50 border border-white/5 rounded-2xl px-5 py-4 text-center">
             <p className="text-gray-500 text-xs leading-relaxed">
-              Your tracking code was provided when your document was submitted at the NBSC Student Affairs Office.
-              Contact the SAS office if you don't have your tracking code.
+              Your tracking code was provided when your document was submitted at the SASDD Office.
             </p>
           </div>
         )}

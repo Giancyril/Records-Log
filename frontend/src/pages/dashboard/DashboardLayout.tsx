@@ -4,12 +4,13 @@ import { useAdminUser, signOut } from "../../auth/auth";
 import { toast } from "react-toastify";
 import {
   FaHome, FaFileAlt, FaHistory, FaCog, FaBars, FaTimes,
-  FaSignOutAlt, FaChevronDown, FaChartBar, FaBoxOpen
+  FaSignOutAlt, FaChevronDown, FaChartBar, FaBoxOpen, FaSearch, 
 } from "react-icons/fa";
 
 const NAV = [
   { to: "/dashboard", label: "Overview", icon: FaHome },
   { to: "/records", label: "Records", icon: FaFileAlt },
+  { to: "/track", label: "Track Document", icon: FaSearch },
   { to: "/archive", label: "Archive", icon: FaBoxOpen },
   { to: "/analytics", label: "Analytics", icon: FaChartBar },
   { to: "/activity-logs", label: "Activity Logs", icon: FaHistory }

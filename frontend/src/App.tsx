@@ -53,8 +53,8 @@ export default function App() {
             <Route path="activity-logs"      element={<ActivityPage />} />
             <Route path="settings"           element={<SettingsPage />} />
             <Route path="analytics"          element={<AnalyticsPage />} />
-            <Route path="/track"             element={<TrackRecordPage />} />
-            <Route path="/track/:code"       element={<TrackRecordPage />} />
+            <Route path="track"              element={<TrackRecordPage />} /> 
+            <Route path="track/:code"        element={<TrackRecordPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
