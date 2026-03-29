@@ -1,35 +1,43 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { 
-  useGetRecordsQuery, 
-  useDeleteRecordMutation, 
+import {
+  useGetRecordsQuery,
+  useDeleteRecordMutation,
   useBulkDeleteRecordsMutation,
   useArchiveRecordMutation,
-  useBulkCreateRecordsMutation
+  useBulkCreateRecordsMutation,
+  useBulkReceiveRecordsMutation,
+  useBulkReleaseRecordsMutation,
 } from "../../redux/api/api";
 import { toast } from "react-toastify";
 import {
   FaPlus, FaSearch, FaTrash, FaEye, FaFileAlt, FaTimes,
   FaCheckSquare, FaSquare, FaFilter, FaDownload, FaFileUpload,
-  FaBox
+  FaBox, FaInbox, FaShare,
 } from "react-icons/fa";
 import type { Record as Rec } from "../../types/types";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useConfirm } from "../../hooks/useConfirm";
+import BulkActionModal from "../../components/records/BulkActionModal";
 
 const TYPE_TABS = [
   { label: "All Records", value: "" },
-  { label: "Incoming", value: "INCOMING" },
-  { label: "Outgoing", value: "OUTGOING" }
+  { label: "Incoming",    value: "INCOMING" },
+  { label: "Outgoing",    value: "OUTGOING" },
 ];
-const STATUS_TABS = [{ label: "All", value: "" }, { label: "Pending", value: "PENDING" }, { label: "Received", value: "RECEIVED" }, { label: "Released", value: "RELEASED" }];
+const STATUS_TABS = [
+  { label: "All",      value: "" },
+  { label: "Pending",  value: "PENDING" },
+  { label: "Received", value: "RECEIVED" },
+  { label: "Released", value: "RELEASED" },
+];
 
 const TYPE_COLOR: Record<string, string> = {
   INCOMING: "bg-purple-500/15 text-purple-400 border-purple-500/20",
   OUTGOING: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
 };
 const STATUS_COLOR: Record<string, string> = {
-  PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  PENDING:  "bg-amber-500/15 text-amber-400 border-amber-500/20",
   RECEIVED: "bg-blue-500/15 text-blue-400 border-blue-500/20",
   RELEASED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
 };
@@ -44,45 +52,52 @@ const exportCSV = (records: Rec[]) => {
     r.personName, r.personDepartment, r.fromOffice, r.toOffice,
     fmt(r.documentDate), fmt(r.createdAt),
   ]);
-  const csv = [headers, ...rows].map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+  const csv = [headers, ...rows]
+    .map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = `records-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  a.download = `records-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
   URL.revokeObjectURL(url);
 };
 
 export default function RecordsPage() {
   const { confirm, isOpen, options, handleConfirm, handleCancel } = useConfirm();
 
-  const [search, setSearch] = useState("");
-  const [type, setType] = useState("");
-  const [status, setStatus] = useState("");
-  const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search,      setSearch]      = useState("");
+  const [type,        setType]        = useState("");
+  const [status,      setStatus]      = useState("");
+  const [page,        setPage]        = useState(1);
+  const [selected,    setSelected]    = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom,    setDateFrom]    = useState("");
+  const [dateTo,      setDateTo]      = useState("");
+  const [bulkModal,   setBulkModal]   = useState<"receive" | "release" | null>(null);
 
-  const [deleteRecord] = useDeleteRecordMutation();
-  const [bulkDelete, { isLoading: bulkDeleting }] = useBulkDeleteRecordsMutation();
-  const [archiveRecord] = useArchiveRecordMutation();
-  const [bulkCreate, { isLoading: importing }] = useBulkCreateRecordsMutation();
+  const [deleteRecord]                                   = useDeleteRecordMutation();
+  const [bulkDelete,   { isLoading: bulkDeleting  }]    = useBulkDeleteRecordsMutation();
+  const [archiveRecord]                                  = useArchiveRecordMutation();
+  const [bulkCreate,   { isLoading: importing     }]    = useBulkCreateRecordsMutation();
+  const [bulkReceive,  { isLoading: bulkReceiving }]    = useBulkReceiveRecordsMutation();
+  const [bulkRelease,  { isLoading: bulkReleasing }]    = useBulkReleaseRecordsMutation();
 
   const { data, isLoading } = useGetRecordsQuery({
     search, type, status, page, limit: 12,
     ...(dateFrom && { dateFrom }),
-    ...(dateTo && { dateTo }),
+    ...(dateTo   && { dateTo }),
   });
 
   const records = (data?.data ?? []) as Rec[];
-  const meta = data?.meta;
+  const meta    = data?.meta;
 
-  const hasFilters = !!(dateFrom || dateTo);
-  const allOnPageSelected = records.length > 0 && records.every(r => selected.has(r.id));
-  const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const toggleAll = () => setSelected(prev => prev.size === records.length ? new Set() : new Set(records.map(r => r.id)));
-  const clearSelection = () => setSelected(new Set());
+  const hasFilters         = !!(dateFrom || dateTo);
+  const allOnPageSelected  = records.length > 0 && records.every(r => selected.has(r.id));
+  const toggleSelect       = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleAll          = () => setSelected(prev => prev.size === records.length ? new Set() : new Set(records.map(r => r.id)));
+  const clearSelection     = () => setSelected(new Set());
 
   const handleDelete = async (r: Rec) => {
     const ok = await confirm({ title: "Delete Record", message: `Delete "${r.documentTitle}"? This cannot be undone.`, confirmText: "Delete", variant: "danger" });
@@ -101,66 +116,71 @@ export default function RecordsPage() {
     } catch (err: any) { toast.error(err?.data?.message ?? "Bulk delete failed"); }
   };
 
+  const handleBulkReceive = async (formData: { receiverSignature: string; actionTaken: string; remarks: string }) => {
+    try {
+      const result: any = await bulkReceive({ ids: Array.from(selected), ...formData }).unwrap();
+      toast.success(`${result.data?.received ?? selected.size} record(s) marked as received`);
+      clearSelection();
+      setBulkModal(null);
+    } catch (err: any) { toast.error(err?.data?.message ?? "Bulk receive failed"); }
+  };
+ 
+  const handleBulkRelease = async (formData: { receiverSignature: string; actionTaken: string; remarks: string }) => {
+    try {
+      const result: any = await bulkRelease({ ids: Array.from(selected), ...formData }).unwrap();
+      toast.success(`${result.data?.released ?? selected.size} record(s) marked as released`);
+      clearSelection();
+      setBulkModal(null);
+    } catch (err: any) { toast.error(err?.data?.message ?? "Bulk release failed"); }
+  };
+
   const handleArchive = async (r: Rec) => {
     const ok = await confirm({ title: "Archive Record", message: `Move "${r.documentTitle}" to archive?`, confirmText: "Archive", variant: "info" });
     if (!ok) return;
-    try {
-      await archiveRecord(r.id).unwrap();
-      toast.success("Record archived");
-    } catch (err: any) { toast.error(err?.data?.message ?? "Failed to archive"); }
+    try { await archiveRecord(r.id).unwrap(); toast.success("Record archived"); }
+    catch (err: any) { toast.error(err?.data?.message ?? "Failed to archive"); }
   };
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
-        const text = event.target?.result as string;
-        const lines = text.split("\n").filter(l => l.trim());
+        const text    = event.target?.result as string;
+        const lines   = text.split("\n").filter(l => l.trim());
         if (lines.length < 2) return toast.error("CSV is empty or invalid");
-
         const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
-        const rows = lines.slice(1);
-
+        const rows    = lines.slice(1);
         const recordsToCreate = rows.map(line => {
           const values = line.split(",").map(v => v.trim().replace(/^"|"$/g, ""));
           const obj: any = {};
           headers.forEach((h, i) => {
             const val = values[i];
-            // Map common CSV headers to backend fields
-            if (h.toLowerCase() === "title") obj.documentTitle = val;
-            if (h.toLowerCase() === "number") obj.documentNumber = val;
-            if (h.toLowerCase() === "type") obj.type = val?.toUpperCase();
-            if (h.toLowerCase() === "person") obj.personName = val;
-            if (h.toLowerCase() === "email") obj.personEmail = val;
-            if (h.toLowerCase() === "department") obj.personDepartment = val;
-            if (h.toLowerCase() === "position") obj.personPosition = val;
-            if (h.toLowerCase() === "office from") obj.fromOffice = val;
-            if (h.toLowerCase() === "office to") obj.toOffice = val;
-            if (h.toLowerCase() === "subject") obj.subject = val;
-            if (h.toLowerCase() === "particulars") obj.particulars = val;
-            if (h.toLowerCase() === "category") obj.category = val;
-            if (h.toLowerCase() === "date") obj.documentDate = val;
-            if (h.toLowerCase() === "remarks") obj.remarks = val;
+            if (h.toLowerCase() === "title")        obj.documentTitle    = val;
+            if (h.toLowerCase() === "number")       obj.documentNumber   = val;
+            if (h.toLowerCase() === "type")         obj.type             = val?.toUpperCase();
+            if (h.toLowerCase() === "person")       obj.personName       = val;
+            if (h.toLowerCase() === "email")        obj.personEmail      = val;
+            if (h.toLowerCase() === "department")   obj.personDepartment = val;
+            if (h.toLowerCase() === "position")     obj.personPosition   = val;
+            if (h.toLowerCase() === "office from")  obj.fromOffice       = val;
+            if (h.toLowerCase() === "office to")    obj.toOffice         = val;
+            if (h.toLowerCase() === "subject")      obj.subject          = val;
+            if (h.toLowerCase() === "particulars")  obj.particulars      = val;
+            if (h.toLowerCase() === "category")     obj.category         = val;
+            if (h.toLowerCase() === "date")         obj.documentDate     = val;
+            if (h.toLowerCase() === "remarks")      obj.remarks          = val;
           });
-
-          // Ensure defaults for required fields
-          if (!obj.type) obj.type = "INCOMING";
-          if (!obj.documentDate) obj.documentDate = new Date().toISOString();
+          if (!obj.type)              obj.type             = "INCOMING";
+          if (!obj.documentDate)      obj.documentDate     = new Date().toISOString();
           if (!obj.submitterSignature) obj.submitterSignature = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-          
           return obj;
         }).filter(r => r.documentTitle && r.personName);
-
         if (recordsToCreate.length === 0) return toast.error("No valid records found in CSV");
-
         await bulkCreate(recordsToCreate).unwrap();
         toast.success(`Successfully imported ${recordsToCreate.length} records`);
-      } catch (err: any) {
-        toast.error(err?.data?.message ?? "Failed to import CSV");
-      }
+      } catch (err: any) { toast.error(err?.data?.message ?? "Failed to import CSV"); }
     };
     reader.readAsText(file);
   };
@@ -170,6 +190,21 @@ export default function RecordsPage() {
       <ConfirmDialog isOpen={isOpen} title={options.title} message={options.message}
         confirmText={options.confirmText} cancelText={options.cancelText}
         variant={options.variant} onConfirm={handleConfirm} onCancel={handleCancel} />
+
+        {bulkModal === "receive" && (
+        <BulkActionModal
+          title="Bulk Receive" description="Mark selected records as received"
+          actionLabel="Confirm Receive" count={selected.size}
+          isLoading={bulkReceiving} onClose={() => setBulkModal(null)} onSubmit={handleBulkReceive}
+        />
+      )}
+      {bulkModal === "release" && (
+        <BulkActionModal
+          title="Bulk Release" description="Mark selected records as released"
+          actionLabel="Confirm Release" count={selected.size}
+          isLoading={bulkReleasing} onClose={() => setBulkModal(null)} onSubmit={handleBulkRelease}
+        />
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
@@ -203,7 +238,9 @@ export default function RecordsPage() {
         <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Date Range</p>
-            {hasFilters && <button onClick={() => { setDateFrom(""); setDateTo(""); setPage(1); }} className="text-xs text-red-400 hover:text-red-300">Clear</button>}
+            {hasFilters && (
+              <button onClick={() => { setDateFrom(""); setDateTo(""); setPage(1); }} className="text-xs text-red-400 hover:text-red-300">Clear</button>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -222,9 +259,17 @@ export default function RecordsPage() {
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-red-500/5 border border-red-500/15 rounded-xl">
-          <span className="text-red-300 text-sm font-semibold">{selected.size} selected</span>
-          <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2 px-4 py-3 bg-blue-500/5 border border-blue-500/15 rounded-xl flex-wrap">
+          <span className="text-blue-300 text-sm font-semibold shrink-0">{selected.size} selected</span>
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <button onClick={() => setBulkModal("receive")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-semibold rounded-lg transition-all">
+              <FaInbox size={10} /> Receive
+            </button>
+            <button onClick={() => setBulkModal("release")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg transition-all">
+              <FaShare size={10} /> Release
+            </button>
             <button onClick={handleBulkDelete} disabled={bulkDeleting}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-all">
               <FaTrash size={10} /> {bulkDeleting ? "Deleting..." : "Delete"}
@@ -237,67 +282,57 @@ export default function RecordsPage() {
         </div>
       )}
 
-      {/* Primary Categories (Type) - Optimized for Mobile */}
-        <div className="flex p-1 sm:p-1.5 bg-gray-900/50 backdrop-blur-md border border-white/5 rounded-xl sm:rounded-2xl w-full shadow-2xl shadow-black/40">
-          {TYPE_TABS.map(({ label, value }) => {
-            const isActive = type === value;
-            return (
+      {/* Type tabs */}
+      <div className="flex p-1 sm:p-1.5 bg-gray-900/50 backdrop-blur-md border border-white/5 rounded-xl sm:rounded-2xl w-full shadow-2xl shadow-black/40">
+        {TYPE_TABS.map(({ label, value }) => (
+          <button
+            key={value}
+            onClick={() => { setType(value); setPage(1); }}
+            className={`relative flex-1 px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-[12px] text-[10px] sm:text-[11px] uppercase tracking-wider font-bold transition-all duration-300 flex items-center justify-center ${
+              type === value
+                ? "bg-blue-600 text-white shadow-lg ring-1 ring-white/10"
+                : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Search + Status chips */}
+      <div className="flex flex-col lg:flex-row gap-3 items-center w-full">
+        <div className="relative w-full lg:flex-1 group">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={11} />
+          <input
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search records..."
+            className="w-full pl-10 pr-10 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-xs sm:text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+          />
+          {search && (
+            <button onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
+              <FaTimes size={10} />
+            </button>
+          )}
+        </div>
+        <div className="w-full lg:w-auto">
+          <div className="flex gap-2 w-full lg:justify-end overflow-x-auto py-1">
+            {STATUS_TABS.map(({ label, value }) => (
               <button
                 key={value}
-                onClick={() => { setType(value); setPage(1); }}
-                className={`relative flex-1 px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-[12px] text-[10px] sm:text-[11px] uppercase tracking-wider font-bold transition-all duration-300 flex items-center justify-center ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-lg ring-1 ring-white/10"
-                    : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]"
+                onClick={() => { setStatus(value); setPage(1); }}
+                className={`flex-1 lg:flex-none px-5 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-200 border whitespace-nowrap flex items-center justify-center shrink-0 ${
+                  status === value
+                    ? "bg-blue-600/10 border-blue-500/40 text-blue-400 shadow-lg shadow-blue-500/5"
+                    : "bg-gray-900/40 border-white/5 text-gray-500 hover:border-white/10 hover:text-gray-300"
                 }`}
               >
                 {label}
               </button>
-            );
-          })}
-        </div>
-
-        {/* Search + Secondary Filters Container */}
-        <div className="flex flex-col lg:flex-row gap-3 items-center w-full mt-4">
-          
-          {/* Search Bar - Grows to fill space on desktop, full width on mobile */}
-          <div className="relative w-full lg:flex-1 group">
-            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={11} />
-            <input 
-              value={search} 
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Search records..."
-              className="w-full pl-10 pr-10 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-xs sm:text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-inner" 
-            />
-            {search && (
-              <button onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
-                <FaTimes size={10} />
-              </button>
-            )}
-          </div>
-
-          {/* Status Chips - Fills width on mobile, Right-justified on desktop */}
-          <div className="w-full lg:w-auto">
-            <div className="flex gap-2 w-full lg:justify-end overflow-x-auto no-scrollbar py-1">
-              {STATUS_TABS.map(({ label, value }) => {
-                const isActive = status === value;
-                return (
-                  <button
-                    key={value}
-                    onClick={() => { setStatus(value); setPage(1); }}
-                    className={`flex-1 lg:flex-none px-5 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-200 border whitespace-nowrap flex items-center justify-center shrink-0 ${
-                      isActive
-                        ? "bg-blue-600/10 border-blue-500/40 text-blue-400 shadow-lg shadow-blue-500/5"
-                        : "bg-gray-900/40 border-white/5 text-gray-500 hover:border-white/10 hover:text-gray-300"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+            ))}
           </div>
         </div>
+      </div>
 
       {/* Table */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-x-auto">
@@ -315,7 +350,9 @@ export default function RecordsPage() {
         </div>
 
         {isLoading ? (
-          <div className="p-5 space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-14 bg-gray-800/60 rounded-xl animate-pulse" />)}</div>
+          <div className="p-5 space-y-2">
+            {[...Array(5)].map((_, i) => <div key={i} className="h-14 bg-gray-800/60 rounded-xl animate-pulse" />)}
+          </div>
         ) : records.length === 0 ? (
           <div className="py-20 text-center">
             <FaFileAlt size={32} className="text-gray-700 mx-auto mb-3" />
@@ -355,8 +392,7 @@ export default function RecordsPage() {
                   </div>
                   <div className="col-span-1 flex items-center justify-end gap-1.5">
                     <button onClick={() => handleArchive(r)}
-                      className="w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 transition-colors"
-                      title="Archive">
+                      className="w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 transition-colors" title="Archive">
                       <FaBox size={11} />
                     </button>
                     <Link to={`/records/${r.id}`}
@@ -411,7 +447,9 @@ export default function RecordsPage() {
       {meta && meta.totalPage > 1 && (
         <div className="flex items-center justify-center gap-1.5">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-gray-400 text-xs disabled:opacity-40 hover:text-white transition-colors">Prev</button>
+            className="px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-gray-400 text-xs disabled:opacity-40 hover:text-white transition-colors">
+            Prev
+          </button>
           {Array.from({ length: meta.totalPage }, (_, i) => i + 1).map(p => (
             <button key={p} onClick={() => setPage(p)}
               className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${p === page ? "bg-blue-600 text-white" : "bg-gray-900 border border-white/5 text-gray-400 hover:text-white"}`}>
@@ -419,7 +457,9 @@ export default function RecordsPage() {
             </button>
           ))}
           <button onClick={() => setPage(p => Math.min(meta.totalPage, p + 1))} disabled={page === meta.totalPage}
-            className="px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-gray-400 text-xs disabled:opacity-40 hover:text-white transition-colors">Next</button>
+            className="px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-gray-400 text-xs disabled:opacity-40 hover:text-white transition-colors">
+            Next
+          </button>
         </div>
       )}
     </div>

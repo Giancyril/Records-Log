@@ -10,8 +10,18 @@ export interface User {
   role:     UserRole;
 }
 
+export interface RecordComment {
+  id:         string;
+  content:    string;
+  authorName: string;
+  createdAt:  string;
+  updatedAt:  string;
+  author?:    { id: string; name: string; username: string };
+}
+
 export interface Record {
   id:                 string;
+  trackingCode:       string;
   type:               RecordType;
   status:             RecordStatus;
   documentTitle:      string;
@@ -34,6 +44,7 @@ export interface Record {
   receiverSignature?:  string;
   processedById?:     string;
   processedBy?:       { id: string; name: string; username: string };
+  comments?:          RecordComment[];
   isArchived:         boolean;
   archivedAt?:        string;
   isDeleted:          boolean;
@@ -41,16 +52,37 @@ export interface Record {
   updatedAt:          string;
 }
 
+// Public tracking — no sensitive fields
+export interface TrackedRecord {
+  trackingCode:  string;
+  type:          RecordType;
+  status:        RecordStatus;
+  documentTitle: string;
+  documentNumber: string;
+  category:      string;
+  subject:       string;
+  fromOffice:    string;
+  toOffice:      string;
+  personName:    string;
+  documentDate:  string;
+  receivedAt?:   string;
+  releasedAt?:   string;
+  actionTaken:   string;
+  remarks:       string;
+  createdAt:     string;
+  updatedAt:     string;
+}
+
 export interface ActivityLog {
-  id:         string;
-  action:     string;
-  entityType: string;
-  entityId?:  string;
+  id:          string;
+  action:      string;
+  entityType:  string;
+  entityId?:   string;
   entityName?: string;
-  details:    string;
-  adminId?:   string;
-  adminName?: string;
-  createdAt:  string;
+  details:     string;
+  adminId?:    string;
+  adminName?:  string;
+  createdAt:   string;
 }
 
 export interface RecordStats {
@@ -63,5 +95,5 @@ export interface RecordStats {
   archived:      number;
   todayCount:    number;
   weekCount:     number;
-  recentRecords: Record[];
+  recentRecords: Pick<Record, "id" | "type" | "status" | "documentTitle" | "personName" | "createdAt">[];
 }

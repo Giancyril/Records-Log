@@ -14,6 +14,7 @@ import RecordDetail    from "./pages/records/RecordDetail";
 import ActivityPage    from "./pages/activity/ActivityLogsPage";
 import SettingsPage    from "./pages/settings/SettingsPage";
 import AnalyticsPage    from "./pages/analytics/AnalyticsPage"
+import TrackRecordPage from "./pages/track/TrackRecord";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return isAuthenticated() ? <>{children}</> : <Navigate to="/login" replace />;
@@ -51,7 +52,9 @@ export default function App() {
             <Route path="records/:id"        element={<RecordDetail />} />
             <Route path="activity-logs"      element={<ActivityPage />} />
             <Route path="settings"           element={<SettingsPage />} />
-            <Route path="analytics"           element={<AnalyticsPage />} />
+            <Route path="analytics"          element={<AnalyticsPage />} />
+            <Route path="/track"             element={<TrackRecordPage />} />
+            <Route path="/track/:code"       element={<TrackRecordPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

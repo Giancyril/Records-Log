@@ -29,6 +29,11 @@ const api = baseApi.injectEndpoints({
       query: (body) => ({ url: "/auth/change-username", method: "PUT", body }),
     }),
 
+    // ── Public tracking (no auth needed) ─────────────────────────────────
+    trackRecord: build.query({
+      query: (trackingCode: string) => `/track/${trackingCode}`,
+    }),
+
     // ── Records ───────────────────────────────────────────────────────────
     getRecords: build.query({
       query: (params) => ({ url: "/records", params }),
@@ -58,6 +63,21 @@ const api = baseApi.injectEndpoints({
       query: ({ id, ...body }) => ({ url: `/records/${id}/release`, method: "PUT", body }),
       invalidatesTags: ["records", "stats"],
     }),
+
+    // ── Bulk receive / release ────────────────────────────────────────────
+    bulkReceiveRecords: build.mutation({
+      query: (body: { ids: string[]; actionTaken?: string; remarks?: string; receiverSignature: string }) => ({
+        url: "/records/bulk-receive", method: "PUT", body,
+      }),
+      invalidatesTags: ["records", "stats"],
+    }),
+    bulkReleaseRecords: build.mutation({
+      query: (body: { ids: string[]; actionTaken?: string; remarks?: string; receiverSignature: string }) => ({
+        url: "/records/bulk-release", method: "PUT", body,
+      }),
+      invalidatesTags: ["records", "stats"],
+    }),
+
     deleteRecord: build.mutation({
       query: (id: string) => ({ url: `/records/${id}`, method: "DELETE" }),
       invalidatesTags: ["records", "stats"],
@@ -77,6 +97,24 @@ const api = baseApi.injectEndpoints({
     bulkCreateRecords: build.mutation({
       query: (body: any[]) => ({ url: "/records/bulk", method: "POST", body }),
       invalidatesTags: ["records", "stats"],
+    }),
+
+    // ── Comments ──────────────────────────────────────────────────────────
+    getComments: build.query({
+      query: (recordId: string) => `/records/${recordId}/comments`,
+      providesTags: ["comments"],
+    }),
+    createComment: build.mutation({
+      query: ({ recordId, content }: { recordId: string; content: string }) => ({
+        url: `/records/${recordId}/comments`, method: "POST", body: { content },
+      }),
+      invalidatesTags: ["comments"],
+    }),
+    deleteComment: build.mutation({
+      query: ({ recordId, commentId }: { recordId: string; commentId: string }) => ({
+        url: `/records/${recordId}/comments/${commentId}`, method: "DELETE",
+      }),
+      invalidatesTags: ["comments"],
     }),
 
     // ── Activity Logs ─────────────────────────────────────────────────────
@@ -99,6 +137,7 @@ export const {
   useChangePasswordMutation,
   useChangeEmailMutation,
   useChangeUsernameMutation,
+  useTrackRecordQuery,
   useGetRecordsQuery,
   useGetSingleRecordQuery,
   useGetRecordStatsQuery,
@@ -106,11 +145,16 @@ export const {
   useUpdateRecordMutation,
   useReceiveRecordMutation,
   useReleaseRecordMutation,
+  useBulkReceiveRecordsMutation,
+  useBulkReleaseRecordsMutation,
   useDeleteRecordMutation,
   useBulkDeleteRecordsMutation,
   useArchiveRecordMutation,
   useUnarchiveRecordMutation,
   useBulkCreateRecordsMutation,
+  useGetCommentsQuery,
+  useCreateCommentMutation,
+  useDeleteCommentMutation,
   useGetActivityLogsQuery,
   useClearActivityLogsMutation,
 } = api;

@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useConfirm } from "../../hooks/useConfirm";
+import CommentsSection from "../../components/records/CommentsSection";
 
 const fmt = (d?: string | null) =>
   d
@@ -78,15 +79,12 @@ function SignatureModal({
   return (
     <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] flex flex-col">
-        {/* Modal header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
           <h3 className="text-sm font-bold text-white">{title}</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-white text-xs transition-colors">
             Cancel
           </button>
         </div>
-
-        {/* Scrollable body */}
         <div className="p-5 space-y-3 overflow-y-auto flex-1">
           <div>
             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
@@ -141,8 +139,6 @@ function SignatureModal({
             </p>
           </div>
         </div>
-
-        {/* Footer */}
         <div className="flex gap-2 px-5 pb-5 pt-2 shrink-0">
           <button
             onClick={onClose}
@@ -172,10 +168,10 @@ export default function RecordDetail() {
   const [showReleaseModal, setShowReleaseModal] = useState(false);
   const [showSig, setShowSig] = useState<"submitter" | "receiver" | null>(null);
 
-  const { data, isLoading }                          = useGetSingleRecordQuery(id!);
-  const [receiveRecord, { isLoading: receiving }]    = useReceiveRecordMutation();
-  const [releaseRecord, { isLoading: releasing }]    = useReleaseRecordMutation();
-  const [deleteRecord,  { isLoading: deleting }]     = useDeleteRecordMutation();
+  const { data, isLoading }                       = useGetSingleRecordQuery(id!);
+  const [receiveRecord, { isLoading: receiving }] = useReceiveRecordMutation();
+  const [releaseRecord, { isLoading: releasing }] = useReleaseRecordMutation();
+  const [deleteRecord,  { isLoading: deleting }]  = useDeleteRecordMutation();
 
   const record = data?.data;
 
@@ -210,7 +206,6 @@ export default function RecordDetail() {
     } catch (err: any) { toast.error(err?.data?.message ?? "Failed"); }
   };
 
-  /* ── Loading skeleton ── */
   if (isLoading) return (
     <div className="max-w-2xl mx-auto w-full space-y-4 overflow-x-hidden">
       <div className="h-8 w-48 bg-gray-800 rounded-xl animate-pulse" />
@@ -218,7 +213,6 @@ export default function RecordDetail() {
     </div>
   );
 
-  /* ── Not found ── */
   if (!record) return (
     <div className="max-w-2xl mx-auto w-full text-center py-20 overflow-x-hidden">
       <p className="text-gray-400">Record not found.</p>
@@ -249,7 +243,6 @@ export default function RecordDetail() {
         />
       )}
 
-      {/* Signature viewer */}
       {showSig && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
@@ -274,9 +267,8 @@ export default function RecordDetail() {
         </div>
       )}
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex items-start gap-3">
-
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${TYPE_COLOR[record.type]}`}>
@@ -293,8 +285,6 @@ export default function RecordDetail() {
             <p className="text-gray-500 text-xs mt-0.5">#{record.documentNumber}</p>
           )}
         </div>
-
-        {/* Action buttons — stacked on mobile so they don't overflow */}
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 shrink-0">
           {record.status === "PENDING" && (
             <button
@@ -322,7 +312,7 @@ export default function RecordDetail() {
         </div>
       </div>
 
-      {/* ── Document Info ── */}
+      {/* Document Info */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/5">
           <h2 className="text-sm font-bold text-white">Document Information</h2>
@@ -349,7 +339,7 @@ export default function RecordDetail() {
         </div>
       </div>
 
-      {/* ── Person Info ── */}
+      {/* Person Info */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/5">
           <h2 className="text-sm font-bold text-white">Person Information</h2>
@@ -362,7 +352,7 @@ export default function RecordDetail() {
         </div>
       </div>
 
-      {/* ── Status Timeline ── */}
+      {/* Status Timeline */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/5">
           <h2 className="text-sm font-bold text-white">Status Timeline</h2>
@@ -374,13 +364,11 @@ export default function RecordDetail() {
             { label: "Released", time: record.releasedAt, done: !!record.releasedAt },
           ].map(({ label, time, done }) => (
             <div key={label} className="flex items-center gap-3">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                  done
-                    ? "bg-emerald-500/20 border border-emerald-500/30"
-                    : "bg-gray-800 border border-white/5"
-                }`}
-              >
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                done
+                  ? "bg-emerald-500/20 border border-emerald-500/30"
+                  : "bg-gray-800 border border-white/5"
+              }`}>
                 {done
                   ? <FaCheck size={9} className="text-emerald-400" />
                   : <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
@@ -395,7 +383,7 @@ export default function RecordDetail() {
         </div>
       </div>
 
-      {/* ── Action Taken ── */}
+      {/* Action Taken */}
       {record.actionTaken && (
         <div className="bg-gray-900 border border-white/5 rounded-2xl p-5">
           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Action Taken</p>
@@ -403,13 +391,12 @@ export default function RecordDetail() {
         </div>
       )}
 
-      {/* ── Signatures ── */}
+      {/* Signatures */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/5">
           <h2 className="text-sm font-bold text-white">Signatures</h2>
         </div>
         <div className="p-5 grid grid-cols-2 gap-4">
-          {/* Submitter */}
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Submitter</p>
             {record.submitterSignature ? (
@@ -417,11 +404,7 @@ export default function RecordDetail() {
                 onClick={() => setShowSig("submitter")}
                 className="w-full h-20 rounded-xl bg-gray-800 border border-white/5 overflow-hidden hover:border-blue-500/30 transition-colors"
               >
-                <img
-                  src={record.submitterSignature}
-                  alt="Submitter sig"
-                  className="w-full h-full object-contain"
-                />
+                <img src={record.submitterSignature} alt="Submitter sig" className="w-full h-full object-contain" />
               </button>
             ) : (
               <div className="w-full h-20 rounded-xl bg-gray-800 border border-white/5 flex items-center justify-center">
@@ -429,8 +412,6 @@ export default function RecordDetail() {
               </div>
             )}
           </div>
-
-          {/* Receiver */}
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Receiver</p>
             {record.receiverSignature ? (
@@ -438,11 +419,7 @@ export default function RecordDetail() {
                 onClick={() => setShowSig("receiver")}
                 className="w-full h-20 rounded-xl bg-gray-800 border border-white/5 overflow-hidden hover:border-blue-500/30 transition-colors"
               >
-                <img
-                  src={record.receiverSignature}
-                  alt="Receiver sig"
-                  className="w-full h-full object-contain"
-                />
+                <img src={record.receiverSignature} alt="Receiver sig" className="w-full h-full object-contain" />
               </button>
             ) : (
               <div className="w-full h-20 rounded-xl bg-gray-800 border border-white/5 flex items-center justify-center">
@@ -453,7 +430,9 @@ export default function RecordDetail() {
         </div>
       </div>
 
-      {/* bottom padding for mobile scroll comfort */}
+      {/* ── Comments ── */}
+      <CommentsSection recordId={id!} />
+
       <div className="h-4" />
     </div>
   );
