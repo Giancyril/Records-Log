@@ -103,8 +103,8 @@ export default function CommentsSection({ recordId }: { recordId: string }) {
             onKeyDown={e => {
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(e as any); }
             }}
-            placeholder="Add an internal note... (Enter to submit)"
-            rows={2}
+            placeholder="Add an internal note"
+            rows={1}
             className="flex-1 px-3.5 py-2.5 bg-gray-800 border border-white/8 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 resize-none transition-all"
           />
           <button

@@ -124,7 +124,7 @@ export default function RecordsPage() {
       setBulkModal(null);
     } catch (err: any) { toast.error(err?.data?.message ?? "Bulk receive failed"); }
   };
- 
+
   const handleBulkRelease = async (formData: { receiverSignature: string; actionTaken: string; remarks: string }) => {
     try {
       const result: any = await bulkRelease({ ids: Array.from(selected), ...formData }).unwrap();
@@ -172,8 +172,8 @@ export default function RecordsPage() {
             if (h.toLowerCase() === "date")         obj.documentDate     = val;
             if (h.toLowerCase() === "remarks")      obj.remarks          = val;
           });
-          if (!obj.type)              obj.type             = "INCOMING";
-          if (!obj.documentDate)      obj.documentDate     = new Date().toISOString();
+          if (!obj.type)               obj.type              = "INCOMING";
+          if (!obj.documentDate)       obj.documentDate      = new Date().toISOString();
           if (!obj.submitterSignature) obj.submitterSignature = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
           return obj;
         }).filter(r => r.documentTitle && r.personName);
@@ -191,7 +191,7 @@ export default function RecordsPage() {
         confirmText={options.confirmText} cancelText={options.cancelText}
         variant={options.variant} onConfirm={handleConfirm} onCancel={handleCancel} />
 
-        {bulkModal === "receive" && (
+      {bulkModal === "receive" && (
         <BulkActionModal
           title="Bulk Receive" description="Mark selected records as received"
           actionLabel="Confirm Receive" count={selected.size}
@@ -336,13 +336,15 @@ export default function RecordsPage() {
 
       {/* Table */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-x-auto">
+
+        {/* ── Desktop header: checkbox merged into Document col ── */}
         <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
-          <div className="col-span-1 flex items-center">
-            <button onClick={toggleAll} className="text-gray-500 hover:text-white transition-colors">
-              {allOnPageSelected ? <FaCheckSquare size={14} className="text-blue-400" /> : <FaSquare size={14} />}
+          <div className="col-span-5 flex items-center gap-3">
+            <button onClick={toggleAll} className="text-gray-500 hover:text-white transition-colors shrink-0">
+              {allOnPageSelected ? <FaCheckSquare size={13} className="text-blue-400" /> : <FaSquare size={13} />}
             </button>
+            <span>Document</span>
           </div>
-          <div className="col-span-4">Document</div>
           <div className="col-span-2">Person</div>
           <div className="col-span-2">Type</div>
           <div className="col-span-2">Status</div>
@@ -368,17 +370,19 @@ export default function RecordsPage() {
           <div className="divide-y divide-white/[0.04]">
             {records.map(r => (
               <div key={r.id} className={`group transition-colors ${selected.has(r.id) ? "bg-blue-500/5" : "hover:bg-white/[0.02]"}`}>
-                {/* Desktop */}
+
+                {/* ── Desktop row: checkbox inline with document ── */}
                 <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-5 py-3.5">
-                  <div className="col-span-1">
-                    <button onClick={() => toggleSelect(r.id)} className="text-gray-500 hover:text-blue-400 transition-colors">
-                      {selected.has(r.id) ? <FaCheckSquare size={14} className="text-blue-400" /> : <FaSquare size={14} />}
+                  {/* Document + checkbox merged */}
+                  <div className="col-span-5 flex items-start gap-3 min-w-0">
+                    <button onClick={() => toggleSelect(r.id)} className="text-gray-500 hover:text-blue-400 transition-colors mt-0.5 shrink-0">
+                      {selected.has(r.id) ? <FaCheckSquare size={13} className="text-blue-400" /> : <FaSquare size={13} />}
                     </button>
-                  </div>
-                  <div className="col-span-4 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{r.documentTitle}</p>
-                    {r.documentNumber && <p className="text-gray-500 text-xs mt-0.5">#{r.documentNumber}</p>}
-                    <p className="text-gray-600 text-xs">{fmt(r.documentDate)}</p>
+                    <div className="min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{r.documentTitle}</p>
+                      {r.documentNumber && <p className="text-gray-500 text-xs mt-0.5">#{r.documentNumber}</p>}
+                      <p className="text-gray-600 text-xs">{fmt(r.documentDate)}</p>
+                    </div>
                   </div>
                   <div className="col-span-2 min-w-0">
                     <p className="text-gray-300 text-sm truncate">{r.personName}</p>
