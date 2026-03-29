@@ -6,6 +6,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 enum UserRole {
   ADMIN
 }
@@ -26,6 +27,8 @@ enum ActivityAction {
   UPDATED
   DELETED
   BULK_DELETED
+  BULK_RECEIVED
+  BULK_RELEASED
   LOGIN
   REGISTERED
   CHANGED_PASSWORD
@@ -37,60 +40,78 @@ enum ActivityAction {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  username     String        @unique
-  email        String        @unique
+  id           String          @id @default(uuid())
+  username     String          @unique
+  email        String          @unique
   password     String
   name         String
-  role         UserRole      @default(ADMIN)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  records      Record[]      @relation("ProcessedBy")
-  activityLogs ActivityLog[] @relation("ActivityLogAdmin")
+  role         UserRole        @default(ADMIN)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  records      Record[]        @relation("ProcessedBy")
+  activityLogs ActivityLog[]   @relation("ActivityLogAdmin")
+  comments     RecordComment[] @relation("CommentAuthor")
 
   @@map("users")
 }
 
 model Record {
-  id                 String       @id @default(uuid())
+  id                 String          @id @default(uuid())
+  trackingCode       String          @unique @default(cuid())
   type               RecordType
-  status             RecordStatus @default(PENDING)
+  status             RecordStatus    @default(PENDING)
 
   documentTitle      String
-  documentNumber     String       @default("")
-  particulars        String       @default("")
-  category           String       @default("")
+  documentNumber     String          @default("")
+  particulars        String          @default("")
+  category           String          @default("")
 
-  fromOffice         String       @default("")
-  toOffice           String       @default("")
-  subject            String       @default("")
+  fromOffice         String          @default("")
+  toOffice           String          @default("")
+  subject            String          @default("")
 
   personName         String
-  personEmail        String       @default("")
-  personDepartment   String       @default("")
-  personPosition     String       @default("")
+  personEmail        String          @default("")
+  personDepartment   String          @default("")
+  personPosition     String          @default("")
 
   documentDate       DateTime
   receivedAt         DateTime?
   releasedAt         DateTime?
 
-  remarks            String       @default("")
-  actionTaken        String       @default("")
+  remarks            String          @default("")
+  actionTaken        String          @default("")
 
   submitterSignature String?
   receiverSignature  String?
 
   processedById      String?
-  processedBy        User?        @relation("ProcessedBy", fields: [processedById], references: [id])
+  processedBy        User?           @relation("ProcessedBy", fields: [processedById], references: [id])
 
-  isArchived         Boolean      @default(false)
+  comments           RecordComment[]
+
+  isArchived         Boolean         @default(false)
   archivedAt         DateTime?
-  isDeleted          Boolean      @default(false)
+  isDeleted          Boolean         @default(false)
   deletedAt          DateTime?
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 
   @@map("records")
+}
+
+model RecordComment {
+  id        String   @id @default(uuid())
+  content   String
+  recordId  String
+  record    Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation("CommentAuthor", fields: [authorId], references: [id])
+  authorName String  @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("record_comments")
 }
 
 model ActivityLog {

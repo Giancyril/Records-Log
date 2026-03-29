@@ -15,22 +15,32 @@ router.put   ("/auth/change-password", auth, authController.changePassword);
 router.put   ("/auth/change-email",    auth, authController.changeEmail);
 router.put   ("/auth/change-username", auth, authController.changeUsername);
 
+// ── Public tracking (no auth) ─────────────────────────────────────────────────
+router.get("/track/:trackingCode", recordsController.trackRecord);
+
 // ── Records ───────────────────────────────────────────────────────────────────
-router.get   ("/records/stats",        auth, recordsController.getStats);
-router.get   ("/records",              auth, recordsController.getRecords);
-router.post  ("/records",              auth, recordsController.createRecord);
-router.get   ("/records/:id",          auth, recordsController.getSingleRecord);
-router.put   ("/records/:id",          auth, recordsController.updateRecord);
-router.put   ("/records/:id/receive",  auth, recordsController.receiveRecord);
-router.put   ("/records/:id/release",  auth, recordsController.releaseRecord);
-router.put   ("/records/:id/archive",  auth, recordsController.archiveRecord);
-router.put   ("/records/:id/unarchive",auth, recordsController.unarchiveRecord);
-router.delete("/records/:id",          auth, recordsController.deleteRecord);
-router.delete("/records/bulk-delete",  auth, recordsController.bulkDelete);
-router.post  ("/records/bulk",         auth, recordsController.bulkCreate);
+router.get   ("/records/stats",              auth, recordsController.getStats);
+router.get   ("/records",                    auth, recordsController.getRecords);
+router.post  ("/records",                    auth, recordsController.createRecord);
+router.post  ("/records/bulk",               auth, recordsController.bulkCreate);
+router.delete("/records/bulk-delete",        auth, recordsController.bulkDelete);
+router.put   ("/records/bulk-receive",       auth, recordsController.bulkReceive);
+router.put   ("/records/bulk-release",       auth, recordsController.bulkRelease);
+router.get   ("/records/:id",                auth, recordsController.getSingleRecord);
+router.put   ("/records/:id",                auth, recordsController.updateRecord);
+router.put   ("/records/:id/receive",        auth, recordsController.receiveRecord);
+router.put   ("/records/:id/release",        auth, recordsController.releaseRecord);
+router.put   ("/records/:id/archive",        auth, recordsController.archiveRecord);
+router.put   ("/records/:id/unarchive",      auth, recordsController.unarchiveRecord);
+router.delete("/records/:id",                auth, recordsController.deleteRecord);
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+router.get   ("/records/:id/comments",              auth, recordsController.getComments);
+router.post  ("/records/:id/comments",              auth, recordsController.createComment);
+router.delete("/records/:id/comments/:commentId",   auth, recordsController.deleteComment);
 
 // ── Activity Logs ─────────────────────────────────────────────────────────────
-router.get   ("/activity-logs",        auth, activityLogController.getLogs);
-router.delete("/activity-logs",        auth, activityLogController.clearAll);
+router.get   ("/activity-logs", auth, activityLogController.getLogs);
+router.delete("/activity-logs", auth, activityLogController.clearAll);
 
 export default router;
