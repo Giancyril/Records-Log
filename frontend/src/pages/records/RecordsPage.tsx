@@ -395,14 +395,14 @@ export default function RecordsPage() {
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_COLOR[r.status]}`}>{r.status}</span>
                   </div>
                   <div className="col-span-1 flex items-center justify-end gap-1.5">
-                    <button onClick={() => handleArchive(r)}
-                      className="w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 transition-colors" title="Archive">
-                      <FaBox size={11} />
-                    </button>
-                    <Link to={`/records/${r.id}`}
+                  <Link to={`/records/${r.id}`}
                       className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center text-blue-400 transition-colors">
                       <FaEye size={11} />
                     </Link>
+                    <button onClick={() => handleArchive(r)}
+                      className="w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 transition-colors" title="Archive">
+                      <FaBox size={11} />
+                    </button>      
                     <button onClick={() => handleDelete(r)}
                       className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors">
                       <FaTrash size={10} />

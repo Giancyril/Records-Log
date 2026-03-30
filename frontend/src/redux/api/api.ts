@@ -126,6 +126,12 @@ const api = baseApi.injectEndpoints({
       query: () => ({ url: "/activity-logs", method: "DELETE" }),
       invalidatesTags: ["activityLogs"],
     }),
+
+    // ── Notifications (polls activity-logs, last 15, every 30s) ──────────
+    getNotifications: build.query({
+      query: () => ({ url: "/activity-logs", params: { limit: 15, page: 1 } }),
+      providesTags: ["activityLogs"],
+    }),
   }),
 });
 
@@ -157,4 +163,5 @@ export const {
   useDeleteCommentMutation,
   useGetActivityLogsQuery,
   useClearActivityLogsMutation,
+  useGetNotificationsQuery,
 } = api;
