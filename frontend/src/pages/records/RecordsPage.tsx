@@ -427,12 +427,12 @@ export default function RecordsPage() {
                           </div>
                         </div>
                         <div className="flex gap-1.5 shrink-0">
-                          <button onClick={() => handleArchive(r)} className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                            <FaBox size={12} />
-                          </button>
                           <Link to={`/records/${r.id}`} className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                             <FaEye size={12} />
                           </Link>
+                          <button onClick={() => handleArchive(r)} className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <FaBox size={12} />
+                          </button>                  
                           <button onClick={() => handleDelete(r)} className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
                             <FaTrash size={11} />
                           </button>
