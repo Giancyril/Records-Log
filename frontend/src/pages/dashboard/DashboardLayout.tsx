@@ -20,13 +20,21 @@ const NAV = [
 ];
 
 // ─── Notification helpers ─────────────────────────────────────────────────────
-const SEEN_KEY = "nbsc_notif_seen_id";
+const SEEN_KEY    = "nbsc_notif_seen_id";
+const CLEARED_KEY = "nbsc_notif_cleared_at";
+const READ_IDS_KEY = "nbsc_notif_read_ids";
 
-function getSeenId(): string {
-  return localStorage.getItem(SEEN_KEY) ?? "";
+function getSeenId(): string { return localStorage.getItem(SEEN_KEY) ?? ""; }
+function setSeenId(id: string) { localStorage.setItem(SEEN_KEY, id); }
+
+function getReadIds(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(READ_IDS_KEY) ?? "[]")); }
+  catch { return new Set(); }
 }
-function setSeenId(id: string) {
-  localStorage.setItem(SEEN_KEY, id);
+function saveReadIds(ids: Set<string>) {
+  // Keep max 200 IDs to avoid bloat
+  const arr = Array.from(ids).slice(-200);
+  localStorage.setItem(READ_IDS_KEY, JSON.stringify(arr));
 }
 
 /** Pick an icon + color based on the action string */
@@ -58,12 +66,11 @@ function fmtRelative(dateStr: string): string {
 }
 
 // ─── Notification bell + dropdown ────────────────────────────────────────────
-const CLEARED_KEY = "nbsc_notif_cleared_at";
-
 function NotificationBell() {
   const [open,      setOpen]      = useState(false);
   const [seenId,    setSeenIdS]   = useState(getSeenId);
   const [clearedAt, setClearedAt] = useState<string>(() => localStorage.getItem(CLEARED_KEY) ?? "");
+  const [readIds,   setReadIds]   = useState<Set<string>>(getReadIds);
   const dropRef                   = useRef<HTMLDivElement>(null);
 
   // Poll every 30 s
@@ -81,10 +88,13 @@ function NotificationBell() {
 
   const latest = logs[0];
 
-  // Unread = logs newer than the last seen id
-  const unreadCount = seenId
-    ? logs.filter(l => l.id > seenId).length
-    : logs.length;
+  // A log is unread if its id > seenId AND not individually read
+  const isLogUnread = (log: ActivityLog) => {
+    if (readIds.has(log.id)) return false;
+    return seenId ? log.id > seenId : true;
+  };
+
+  const unreadCount = logs.filter(isLogUnread).length;
 
   // Close on outside click
   useEffect(() => {
@@ -96,22 +106,34 @@ function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const handleOpen = useCallback(() => {
-    setOpen(o => !o);
+  const handleOpen = useCallback(() => setOpen(o => !o), []);
+
+  // Mark single notification as read on click
+  const handleItemClick = useCallback((id: string) => {
+    setReadIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      saveReadIds(next);
+      return next;
+    });
   }, []);
 
   const handleMarkAllRead = useCallback(() => {
     if (!latest?.id) return;
     setSeenId(latest.id);
     setSeenIdS(latest.id);
+    // Also clear individual read tracking since all are now read via seenId
+    setReadIds(new Set());
+    saveReadIds(new Set());
   }, [latest]);
 
   const handleClearAll = useCallback(() => {
     const now = new Date().toISOString();
     localStorage.setItem(CLEARED_KEY, now);
     setClearedAt(now);
-    // Also mark all as read
     if (latest?.id) { setSeenId(latest.id); setSeenIdS(latest.id); }
+    setReadIds(new Set());
+    saveReadIds(new Set());
   }, [latest]);
 
   return (
@@ -177,14 +199,17 @@ function NotificationBell() {
                 <p className="text-gray-500 text-xs">No notifications</p>
               </div>
             ) : (
-              logs.map((log, i) => {
+              logs.map((log) => {
                 const { icon, color, dot } = notifMeta(log.action);
-                const isUnread = seenId ? log.id > seenId : i === 0;
+                const isUnread = isLogUnread(log);
                 return (
                   <div
                     key={log.id}
-                    className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-white/[0.02] ${
-                      isUnread ? "bg-blue-500/[0.04]" : ""
+                    onClick={() => isUnread && handleItemClick(log.id)}
+                    className={`flex items-start gap-3 px-4 py-3 transition-colors ${
+                      isUnread
+                        ? "bg-blue-500/[0.04] hover:bg-blue-500/[0.07] cursor-pointer"
+                        : "hover:bg-white/[0.02] cursor-default"
                     }`}
                   >
                     {/* Icon bubble */}
@@ -194,7 +219,7 @@ function NotificationBell() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-semibold leading-tight truncate">
+                      <p className={`text-xs font-semibold leading-tight truncate ${isUnread ? "text-white" : "text-gray-400"}`}>
                         {log.entityName ?? log.action}
                       </p>
                       <p className="text-gray-500 text-[10px] mt-0.5 leading-snug line-clamp-2">
@@ -206,6 +231,9 @@ function NotificationBell() {
                         )}
                         <span className="text-gray-700 text-[10px]">·</span>
                         <span className="text-gray-600 text-[10px]">{fmtRelative(log.createdAt)}</span>
+                        {isUnread && (
+                          <span className="text-[9px] text-blue-400/60 font-medium ml-auto">tap to mark read</span>
+                        )}
                       </div>
                     </div>
 
