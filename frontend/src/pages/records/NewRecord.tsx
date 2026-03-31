@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import SignatureCanvas from "react-signature-canvas";
 import { useCreateRecordMutation } from "../../redux/api/api";
 import { toast } from "react-toastify";
-import { FaArrowLeft, FaCheck, FaEraser } from "react-icons/fa";
+import { FaCheck, FaEraser } from "react-icons/fa";
 
 const todayStr = () => new Date().toISOString().split("T")[0];
 const steps = ["Doc Info", "Person", "Sign"];
@@ -283,7 +283,7 @@ export default function NewRecord() {
               <input
                 value={form.personDepartment}
                 onChange={(e) => set("personDepartment", e.target.value)}
-                placeholder="e.g. BSIT Department"
+                placeholder=" "
                 className={inputCls}
               />
             </div>
@@ -396,7 +396,7 @@ export default function NewRecord() {
               onClick={back}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/8 text-gray-300 hover:bg-gray-800 text-sm font-medium transition-all"
             >
-              <FaArrowLeft size={11} /> Back
+              Back
             </button>
           )}
           {step < 2 ? (

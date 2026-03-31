@@ -43,60 +43,60 @@ const api = baseApi.injectEndpoints({
       query: (id: string) => `/records/${id}`,
       providesTags: ["records"],
     }),
-    getRecordStats: build.query({
-      query: () => "/records/stats",
+    getRecordStats: build.query<any, { dateFrom?: string; dateTo?: string } | void>({
+      query: (params) => ({ url: "/records/stats", params: params ?? {} }),
       providesTags: ["stats"],
     }),
     createRecord: build.mutation({
       query: (body) => ({ url: "/records", method: "POST", body }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
     updateRecord: build.mutation({
       query: ({ id, ...body }) => ({ url: `/records/${id}`, method: "PUT", body }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
     receiveRecord: build.mutation({
       query: ({ id, ...body }) => ({ url: `/records/${id}/receive`, method: "PUT", body }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
     releaseRecord: build.mutation({
       query: ({ id, ...body }) => ({ url: `/records/${id}/release`, method: "PUT", body }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
 
     // ── Bulk receive / release ────────────────────────────────────────────
     bulkReceiveRecords: build.mutation({
-      query: (body: { ids: string[]; actionTaken?: string; remarks?: string; receiverSignature: string }) => ({
+      query: (body: { ids: string[]; actionTaken?: string; remarks?: string; receiverSignature?: string }) => ({
         url: "/records/bulk-receive", method: "PUT", body,
       }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
     bulkReleaseRecords: build.mutation({
-      query: (body: { ids: string[]; actionTaken?: string; remarks?: string; receiverSignature: string }) => ({
+      query: (body: { ids: string[]; actionTaken?: string; remarks?: string; receiverSignature?: string }) => ({
         url: "/records/bulk-release", method: "PUT", body,
       }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
 
     deleteRecord: build.mutation({
       query: (id: string) => ({ url: `/records/${id}`, method: "DELETE" }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
     bulkDeleteRecords: build.mutation({
       query: (body: { ids: string[] }) => ({ url: "/records/bulk-delete", method: "DELETE", body }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
     archiveRecord: build.mutation({
       query: (id: string) => ({ url: `/records/${id}/archive`, method: "PUT" }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
     unarchiveRecord: build.mutation({
       query: (id: string) => ({ url: `/records/${id}/unarchive`, method: "PUT" }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
     bulkCreateRecords: build.mutation({
       query: (body: any[]) => ({ url: "/records/bulk", method: "POST", body }),
-      invalidatesTags: ["records", "stats"],
+      invalidatesTags: ["records", "stats", "activityLogs"],
     }),
 
     // ── Comments ──────────────────────────────────────────────────────────
@@ -108,13 +108,13 @@ const api = baseApi.injectEndpoints({
       query: ({ recordId, content }: { recordId: string; content: string }) => ({
         url: `/records/${recordId}/comments`, method: "POST", body: { content },
       }),
-      invalidatesTags: ["comments"],
+      invalidatesTags: ["comments", "activityLogs"],
     }),
     deleteComment: build.mutation({
       query: ({ recordId, commentId }: { recordId: string; commentId: string }) => ({
         url: `/records/${recordId}/comments/${commentId}`, method: "DELETE",
       }),
-      invalidatesTags: ["comments"],
+      invalidatesTags: ["comments", "activityLogs"],
     }),
 
     // ── Activity Logs ─────────────────────────────────────────────────────
@@ -127,7 +127,8 @@ const api = baseApi.injectEndpoints({
       invalidatesTags: ["activityLogs"],
     }),
 
-    // ── Notifications (polls activity-logs, last 15, every 30s) ──────────
+    // ── Notifications — shares activityLogs tag so every mutation
+    //    that invalidates activityLogs triggers an immediate refetch ────────
     getNotifications: build.query({
       query: () => ({ url: "/activity-logs", params: { limit: 15, page: 1 } }),
       providesTags: ["activityLogs"],

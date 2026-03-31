@@ -20,24 +20,22 @@ const NAV = [
 ];
 
 // ─── Notification helpers ─────────────────────────────────────────────────────
-const SEEN_KEY    = "nbsc_notif_seen_id";
-const CLEARED_KEY = "nbsc_notif_cleared_at";
+const SEEN_KEY     = "nbsc_notif_seen_at";   // ← store a timestamp, not an ID
+const CLEARED_KEY  = "nbsc_notif_cleared_at";
 const READ_IDS_KEY = "nbsc_notif_read_ids";
 
-function getSeenId(): string { return localStorage.getItem(SEEN_KEY) ?? ""; }
-function setSeenId(id: string) { localStorage.setItem(SEEN_KEY, id); }
+function getSeenAt(): string { return localStorage.getItem(SEEN_KEY) ?? ""; }
+function setSeenAt(ts: string) { localStorage.setItem(SEEN_KEY, ts); }
 
 function getReadIds(): Set<string> {
   try { return new Set(JSON.parse(localStorage.getItem(READ_IDS_KEY) ?? "[]")); }
   catch { return new Set(); }
 }
 function saveReadIds(ids: Set<string>) {
-  // Keep max 200 IDs to avoid bloat
   const arr = Array.from(ids).slice(-200);
   localStorage.setItem(READ_IDS_KEY, JSON.stringify(arr));
 }
 
-/** Pick an icon + color based on the action string */
 function notifMeta(action: string): { icon: React.ReactNode; color: string; dot: string } {
   const a = action.toLowerCase();
   if (a.includes("create") || a.includes("import"))
@@ -56,45 +54,73 @@ function notifMeta(action: string): { icon: React.ReactNode; color: string; dot:
 function fmtRelative(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const s = Math.floor(diff / 1000);
-  if (s < 60)   return "just now";
+  if (s < 60)  return "just now";
   const m = Math.floor(s / 60);
-  if (m < 60)   return `${m}m ago`;
+  if (m < 60)  return `${m}m ago`;
   const h = Math.floor(m / 60);
-  if (h < 24)   return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
+  if (h < 24)  return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 // ─── Notification bell + dropdown ────────────────────────────────────────────
 function NotificationBell() {
   const [open,      setOpen]      = useState(false);
-  const [seenId,    setSeenIdS]   = useState(getSeenId);
-  const [clearedAt, setClearedAt] = useState<string>(() => localStorage.getItem(CLEARED_KEY) ?? "");
-  const [readIds,   setReadIds]   = useState<Set<string>>(getReadIds);
-  const dropRef                   = useRef<HTMLDivElement>(null);
+  const [seenAt,    setSeenAtS]   = useState(getSeenAt);
+  const [clearedAt, setClearedAt] = useState<string>(
+    () => localStorage.getItem(CLEARED_KEY) ?? ""
+  );
+  const [readIds,       setReadIds]       = useState<Set<string>>(getReadIds);
+  const dropRef                           = useRef<HTMLDivElement>(null);
+  const prevLatestIdRef                   = useRef<string>("");
 
-  // Poll every 30 s
   const { data } = useGetNotificationsQuery(undefined, {
-    pollingInterval: 30_000,
+    pollingInterval: 10_000,
     refetchOnFocus:  true,
   });
 
   const allLogs: ActivityLog[] = (data as any)?.data ?? [];
 
-  // Hide logs that were cleared
   const logs = clearedAt
     ? allLogs.filter(l => new Date(l.createdAt) > new Date(clearedAt))
     : allLogs;
 
   const latest = logs[0];
 
-  // A log is unread if its id > seenId AND not individually read
+  // ── A log is unread if: not individually read AND created after seenAt ──
   const isLogUnread = (log: ActivityLog) => {
     if (readIds.has(log.id)) return false;
-    return seenId ? log.id > seenId : true;
+    if (!seenAt) return true;
+    return new Date(log.createdAt) > new Date(seenAt);
   };
 
   const unreadCount = logs.filter(isLogUnread).length;
+
+  // ── Toast on new notification ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!latest?.id) return;
+    if (!prevLatestIdRef.current) {
+      prevLatestIdRef.current = latest.id;
+      return;
+    }
+    if (latest.id !== prevLatestIdRef.current) {
+      prevLatestIdRef.current = latest.id;
+      const { icon, color } = notifMeta(latest.action);
+      toast(
+        <div className="flex items-start gap-2">
+          <span className={`mt-0.5 shrink-0 ${color}`}>{icon}</span>
+          <div className="min-w-0">
+            <p className="text-white text-xs font-semibold truncate">
+              {latest.entityName ?? latest.action}
+            </p>
+            <p className="text-gray-400 text-[11px] mt-0.5 line-clamp-2">
+              {latest.details || latest.action}
+            </p>
+          </div>
+        </div>,
+        { toastId: latest.id }
+      );
+    }
+  }, [latest]);
 
   // Close on outside click
   useEffect(() => {
@@ -108,7 +134,6 @@ function NotificationBell() {
 
   const handleOpen = useCallback(() => setOpen(o => !o), []);
 
-  // Mark single notification as read on click
   const handleItemClick = useCallback((id: string) => {
     setReadIds(prev => {
       const next = new Set(prev);
@@ -118,27 +143,27 @@ function NotificationBell() {
     });
   }, []);
 
+  // Mark all read — store current timestamp as seenAt
   const handleMarkAllRead = useCallback(() => {
-    if (!latest?.id) return;
-    setSeenId(latest.id);
-    setSeenIdS(latest.id);
-    // Also clear individual read tracking since all are now read via seenId
+    const now = new Date().toISOString();
+    setSeenAt(now);
+    setSeenAtS(now);
     setReadIds(new Set());
     saveReadIds(new Set());
-  }, [latest]);
+  }, []);
 
   const handleClearAll = useCallback(() => {
     const now = new Date().toISOString();
     localStorage.setItem(CLEARED_KEY, now);
     setClearedAt(now);
-    if (latest?.id) { setSeenId(latest.id); setSeenIdS(latest.id); }
+    setSeenAt(now);
+    setSeenAtS(now);
     setReadIds(new Set());
     saveReadIds(new Set());
-  }, [latest]);
+  }, []);
 
   return (
     <div ref={dropRef} className="relative">
-      {/* Bell button */}
       <button
         onClick={handleOpen}
         className="relative w-8 h-8 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-all"
@@ -152,26 +177,24 @@ function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown */}
       {open && (
         <div className="fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-11 sm:w-80 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden z-50">
 
-          {/* Header */}
           <div className="px-4 py-3 border-b border-white/5 space-y-2">
-            {/* Title row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FaBell size={11} className="text-blue-400" />
                 <p className="text-white text-xs font-bold">Notifications</p>
                 {unreadCount === 0 && logs.length > 0 && (
-                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">All read</span>
+                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">
+                    All read
+                  </span>
                 )}
               </div>
               {logs.length > 0 && (
                 <span className="text-[10px] text-gray-600">{logs.length} recent</span>
               )}
             </div>
-            {/* Action buttons row */}
             {logs.length > 0 && (
               <div className="flex items-center gap-2">
                 <button
@@ -191,7 +214,6 @@ function NotificationBell() {
             )}
           </div>
 
-          {/* List */}
           <div className="max-h-[360px] overflow-y-auto divide-y divide-white/[0.04]">
             {logs.length === 0 ? (
               <div className="py-10 text-center">
@@ -212,12 +234,9 @@ function NotificationBell() {
                         : "hover:bg-white/[0.02] cursor-default"
                     }`}
                   >
-                    {/* Icon bubble */}
                     <div className={`w-7 h-7 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0 mt-0.5 ${color}`}>
                       {icon}
                     </div>
-
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <p className={`text-xs font-semibold leading-tight truncate ${isUnread ? "text-white" : "text-gray-400"}`}>
                         {log.entityName ?? log.action}
@@ -232,12 +251,12 @@ function NotificationBell() {
                         <span className="text-gray-700 text-[10px]">·</span>
                         <span className="text-gray-600 text-[10px]">{fmtRelative(log.createdAt)}</span>
                         {isUnread && (
-                          <span className="text-[9px] text-blue-400/60 font-medium ml-auto">tap to mark read</span>
+                          <span className="text-[9px] text-blue-400/60 font-medium ml-auto">
+                            tap to mark read
+                          </span>
                         )}
                       </div>
                     </div>
-
-                    {/* Unread dot */}
                     {isUnread && (
                       <div className={`w-1.5 h-1.5 rounded-full ${dot} shrink-0 mt-2`} />
                     )}
@@ -247,7 +266,6 @@ function NotificationBell() {
             )}
           </div>
 
-          {/* Footer */}
           {logs.length > 0 && (
             <div className="py-2.5 border-t border-white/5 bg-gray-900/60 flex justify-center">
               <NavLink
@@ -277,7 +295,6 @@ function SidebarContent({
 }) {
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
       <div className="px-5 border-b border-white/5 shrink-0 h-14 flex items-center">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
@@ -300,7 +317,6 @@ function SidebarContent({
         </div>
       </div>
 
-      {/* Nav links */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {NAV.map(({ to, label, icon: Icon }) => (
           <NavLink
@@ -333,10 +349,8 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // Close drawer on route change
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
-  // Close profile dropdown on outside click
   useEffect(() => {
     if (!profileOpen) return;
     const handler = (e: MouseEvent) => {
@@ -363,7 +377,7 @@ export default function DashboardLayout() {
         />
       </aside>
 
-      {/* Mobile drawer overlay */}
+      {/* Mobile drawer */}
       <div className={`lg:hidden fixed inset-0 z-50 flex transition-visibility duration-300 ${sidebarOpen ? "visible" : "invisible"}`}>
         <div
           className={`absolute inset-0 bg-black/70 transition-opacity duration-300 ease-in-out ${sidebarOpen ? "opacity-100" : "opacity-0"}`}
@@ -389,8 +403,6 @@ export default function DashboardLayout() {
 
         {/* Topbar */}
         <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm border-b border-white/5 px-4 lg:px-6 h-14 flex items-center gap-3">
-
-          {/* Mobile hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0"
@@ -398,23 +410,16 @@ export default function DashboardLayout() {
             <FaBars size={13} />
           </button>
 
-          {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-2.5 flex-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0" />
           </div>
 
           <div className="hidden lg:flex flex-1" />
 
-          {/* ── Right side: bell + profile ── */}
           <div className="flex items-center gap-2">
-
-            {/* Notification bell */}
             <NotificationBell />
-
-            {/* Divider */}
             <div className="w-px h-5 bg-white/10" />
 
-            {/* Profile */}
             <div id="profile-menu" className="relative">
               <button
                 onClick={() => setProfileOpen(p => !p)}
@@ -424,10 +429,17 @@ export default function DashboardLayout() {
                   <span className="text-white text-[11px] font-black">{initial}</span>
                 </div>
                 <div className="hidden sm:flex flex-col items-start text-left min-w-0">
-                  <span className="text-white text-xs font-bold leading-tight truncate w-full max-w-[120px]">{userName}</span>
-                  <span className="text-gray-500 text-[10px] leading-tight truncate w-full max-w-[140px]">{userEmail}</span>
+                  <span className="text-white text-xs font-bold leading-tight truncate w-full max-w-[120px]">
+                    {userName}
+                  </span>
+                  <span className="text-gray-500 text-[10px] leading-tight truncate w-full max-w-[140px]">
+                    {userEmail}
+                  </span>
                 </div>
-                <FaChevronDown size={9} className={`hidden sm:block text-gray-500 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
+                <FaChevronDown
+                  size={9}
+                  className={`hidden sm:block text-gray-500 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {profileOpen && (
