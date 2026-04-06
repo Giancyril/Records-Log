@@ -1,26 +1,21 @@
 const TOKEN_KEY = "rl_token";
-const USER_KEY  = "rl_user";
+
+const DUMMY_ADMIN = {
+  id: "00000000-0000-0000-0000-000000000000",
+  email: "admin@nbsc.edu.ph",
+  username: "admin",
+  name: "System Admin",
+  role: "ADMIN",
+};
 
 export const setToken = (token: string) => localStorage.setItem(TOKEN_KEY, token);
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-export const removeToken = () => {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
-};
+export const getToken = () => "dummy-token";
+export const removeToken = () => {};
 
-export const setUser = (user: any) => localStorage.setItem(USER_KEY, JSON.stringify(user));
-export const getUser = () => {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-};
+export const getUser = () => DUMMY_ADMIN;
 
-export const useAdminUser = () => getUser();
+export const useAdminUser = () => DUMMY_ADMIN;
 
-export const signOut = (navigate: any) => {
-  removeToken();
-  navigate("/login");
-};
+export const signOut = (_navigate: any) => {};
 
-export const isAuthenticated = () => !!getToken();
+export const isAuthenticated = () => true;

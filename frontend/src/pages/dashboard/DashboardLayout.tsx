@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useAdminUser, signOut } from "../../auth/auth";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { useAdminUser } from "../../auth/auth";
 import { useGetNotificationsQuery } from "../../redux/api/api";
 import { toast } from "react-toastify";
 import type { ActivityLog } from "../../types/types";
 import {
-  FaHome, FaFileAlt, FaHistory, FaCog, FaBars, FaTimes,
-  FaSignOutAlt, FaChevronDown, FaChartBar, FaBoxOpen, FaSearch,
+  FaHome, FaFileAlt, FaHistory, FaBars, FaTimes,
+  FaChevronDown, FaChartBar, FaBoxOpen, FaSearch,
   FaBell, FaPlus, FaInbox, FaShare, FaTrash, FaArchive, FaEdit, FaCheck,
 } from "react-icons/fa";
 
@@ -291,7 +291,6 @@ function SidebarContent({
   userEmail:  string;
   initial:    string;
   onNavigate: () => void;
-  onSignOut:  () => void;
 }) {
   return (
     <div className="flex flex-col h-full">
@@ -342,7 +341,6 @@ function SidebarContent({
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export default function DashboardLayout() {
-  const navigate    = useNavigate();
   const location    = useLocation();
   const currentUser = useAdminUser();
 
@@ -360,7 +358,6 @@ export default function DashboardLayout() {
     return () => document.removeEventListener("mousedown", handler);
   }, [profileOpen]);
 
-  const handleSignOut = () => { signOut(navigate); toast.info("Signed out"); };
 
   const userName  = currentUser?.name  || "Admin";
   const userEmail = currentUser?.email || "";
@@ -373,7 +370,7 @@ export default function DashboardLayout() {
       <aside className="hidden lg:flex flex-col w-56 bg-gray-900 border-r border-white/5 fixed inset-y-0 left-0 z-30">
         <SidebarContent
           userName={userName} userEmail={userEmail} initial={initial}
-          onNavigate={() => {}} onSignOut={handleSignOut}
+          onNavigate={() => {}}
         />
       </aside>
 
@@ -393,7 +390,6 @@ export default function DashboardLayout() {
           <SidebarContent
             userName={userName} userEmail={userEmail} initial={initial}
             onNavigate={() => setSidebarOpen(false)}
-            onSignOut={() => { setSidebarOpen(false); handleSignOut(); }}
           />
         </aside>
       </div>
@@ -444,27 +440,9 @@ export default function DashboardLayout() {
 
               {profileOpen && (
                 <div className="absolute right-0 top-11 w-48 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-                  <div className="px-4 py-3 border-b border-white/5">
+                  <div className="px-4 py-3">
                     <p className="text-white text-xs font-semibold truncate">{userName}</p>
                     <p className="text-gray-500 text-[10px] mt-0.5 truncate">{userEmail}</p>
-                  </div>
-                  <div className="py-1">
-                    <NavLink
-                      to="/settings"
-                      onClick={() => setProfileOpen(false)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-xs"
-                    >
-                      <FaCog size={11} className="text-gray-400 shrink-0" />
-                      Settings
-                    </NavLink>
-                    <div className="mx-3 my-1 border-t border-white/5" />
-                    <button
-                      onClick={() => { setProfileOpen(false); handleSignOut(); }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs"
-                    >
-                      <FaSignOutAlt size={11} className="text-red-400 shrink-0" />
-                      Sign Out
-                    </button>
                   </div>
                 </div>
               )}
