@@ -12,6 +12,7 @@ export const setToken = (token: string) => localStorage.setItem(TOKEN_KEY, token
 export const getToken = () => "dummy-token";
 export const removeToken = () => {};
 
+export const setUser = (_user: any) => {};
 export const getUser = () => DUMMY_ADMIN;
 
 export const useAdminUser = () => DUMMY_ADMIN;
