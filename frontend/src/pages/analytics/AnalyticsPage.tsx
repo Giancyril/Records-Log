@@ -313,7 +313,7 @@ export default function Analytics() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis dataKey="key" tick={AXIS_STYLE} axisLine={false} tickLine={false} />
                   <YAxis tick={AXIS_STYLE} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
                   <Bar dataKey="growth" name="Growth %" radius={[6, 6, 0, 0]} maxBarSize={24}>
                     {timeData.map((d, i) => <Cell key={i} fill={(d.growth ?? 0) >= 0 ? C.emerald : C.rose} />)}
                   </Bar>

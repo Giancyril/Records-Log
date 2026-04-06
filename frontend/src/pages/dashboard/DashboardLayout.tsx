@@ -444,9 +444,6 @@ export default function DashboardLayout() {
                     <p className="text-white text-xs font-semibold truncate">{userName}</p>
                     <p className="text-gray-500 text-[10px] mt-0.5 truncate">{userEmail}</p>
                   </div>
-                  <div className="border-t border-white/10 px-4 py-2 bg-blue-500/10">
-                    <p className="text-blue-400 text-[10px] uppercase font-black tracking-widest text-center">System Admin Mode</p>
-                  </div>
                 </div>
               )}
             </div>
