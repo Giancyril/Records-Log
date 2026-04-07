@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SignatureCanvas from "react-signature-canvas";
 import { useCreateRecordMutation } from "../../redux/api/api";
 import { toast } from "react-toastify";
 import { FaCheck, FaEraser, FaArrowLeft } from "react-icons/fa";
 import { getSignatureData } from "../../utils/signature";
+import { inferCategorySuggestion } from "../../utils/smartTagging";
 
 const todayStr = () => new Date().toISOString().split("T")[0];
 const steps = ["Document", "Person & Office", "Sign & Submit"];
@@ -89,6 +90,15 @@ export default function NewRecord() {
     remarks: "",
   });
 
+  const suggestedCategory = useMemo(
+    () => inferCategorySuggestion({
+      documentTitle: form.documentTitle,
+      subject: form.subject,
+      particulars: form.particulars,
+    }),
+    [form.documentTitle, form.subject, form.particulars]
+  );
+
   const [createRecord, { isLoading }] = useCreateRecordMutation();
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
@@ -114,8 +124,13 @@ export default function NewRecord() {
       return;
     }
     const submitterSignature = getSignatureData(sigRef);
+    const requestBody = {
+      ...form,
+      submitterSignature,
+      category: form.category.trim() || suggestedCategory,
+    };
     try {
-      const res: any = await createRecord({ ...form, submitterSignature }).unwrap();
+      const res: any = await createRecord(requestBody).unwrap();
       toast.success("Record created!");
       navigate(`/records/${res.data.id}`);
     } catch (err: any) {
@@ -178,6 +193,15 @@ export default function NewRecord() {
                   <option value="">Select category</option>
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
+                {!form.category && suggestedCategory && (
+                  <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-gray-400">
+                    <span>Suggested: <strong className="text-white">{suggestedCategory}</strong></span>
+                    <button type="button" onClick={() => set("category", suggestedCategory)}
+                      className="text-blue-400 hover:text-blue-300 transition-colors text-xs font-semibold">
+                      Use suggestion
+                    </button>
+                  </div>
+                )}
               </Field>
             </Grid>
 

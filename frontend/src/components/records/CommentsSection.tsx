@@ -59,7 +59,7 @@ export default function CommentsSection({ recordId }: { recordId: string }) {
             ))}
           </div>
         ) : comments.length === 0 ? (
-          <div className="py-8 text-center">
+          <div className="py-5 text-center min-h-[110px]">
             <p className="text-gray-600 text-xs">No notes yet. Add the first one below.</p>
           </div>
         ) : (

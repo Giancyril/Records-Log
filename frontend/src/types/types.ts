@@ -96,4 +96,7 @@ export interface RecordStats {
   todayCount:    number;
   weekCount:     number;
   recentRecords: Pick<Record, "id" | "type" | "status" | "documentTitle" | "personName" | "createdAt">[];
+  agingPending:  number;
+  urgentPending: number;
+  uncategorized: number;
 }

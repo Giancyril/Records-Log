@@ -9,6 +9,41 @@ import {
   CreateCommentInput,
 } from "./records.validate";
 
+const CATEGORY_RULES: Array<{ category: string; keywords: string[] }> = [
+  { category: "Memorandum", keywords: ["memo", "memorandum", "memoranda"] },
+  { category: "Letter", keywords: ["letter", "correspondence", "corresponding"] },
+  { category: "Report", keywords: ["report", "analysis", "summary", "audit", "study", "evaluation"] },
+  { category: "Request", keywords: ["request", "apply", "application", "permission", "petition"] },
+  { category: "Certificate", keywords: ["certificate", "certification", "certify"] },
+  { category: "Form", keywords: ["form", "survey", "questionnaire", "application form"] },
+  { category: "Notice", keywords: ["notice", "announcement", "bulletin", "advisory"] },
+];
+
+const URGENCY_KEYWORDS = [
+  "urgent", "asap", "immediate", "priority", "deadline", "critical", "important",
+];
+
+const inferCategoryFromText = (title: string, subject: string, particulars: string) => {
+  const text = [title, subject, particulars].join(" ").toLowerCase();
+  for (const rule of CATEGORY_RULES) {
+    if (rule.keywords.some(keyword => text.includes(keyword))) {
+      return rule.category;
+    }
+  }
+  return "Other";
+};
+
+const buildUrgentPendingWhere = (): any => ({
+  isDeleted: false,
+  isArchived: false,
+  status: "PENDING",
+  OR: URGENCY_KEYWORDS.flatMap(keyword => [
+    { documentTitle: { contains: keyword, mode: "insensitive" as const } },
+    { subject:       { contains: keyword, mode: "insensitive" as const } },
+    { particulars:   { contains: keyword, mode: "insensitive" as const } },
+  ]),
+});
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const recordSelect = {
   id: true, trackingCode: true, type: true, status: true,
@@ -27,13 +62,14 @@ const recordSelect = {
 
 // ── Create ────────────────────────────────────────────────────────────────────
 const createRecord = async (data: CreateRecordInput, adminId: string) => {
+  const category = data.category?.trim() || inferCategoryFromText(data.documentTitle, data.subject ?? "", data.particulars ?? "");
   const record = await prisma.record.create({
     data: {
       type:               data.type,
       documentTitle:      data.documentTitle,
       documentNumber:     data.documentNumber ?? "",
       particulars:        data.particulars    ?? "",
-      category:           data.category       ?? "",
+      category,
       fromOffice:         data.fromOffice     ?? "",
       toOffice:           data.toOffice       ?? "",
       subject:            data.subject        ?? "",
@@ -423,21 +459,24 @@ const bulkCreate = async (records: CreateRecordInput[], adminId: string) => {
   const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { name: true, username: true } });
 
   const created = await prisma.$transaction(
-    records.map(data => prisma.record.create({
-      data: {
-        type: data.type, documentTitle: data.documentTitle,
-        documentNumber: data.documentNumber ?? "",
-        particulars: data.particulars ?? "", category: data.category ?? "",
-        fromOffice: data.fromOffice ?? "", toOffice: data.toOffice ?? "",
-        subject: data.subject ?? "", personName: data.personName,
-        personEmail: data.personEmail ?? "", personDepartment: data.personDepartment ?? "",
-        personPosition: data.personPosition ?? "",
-        documentDate: new Date(data.documentDate),
-        remarks: data.remarks ?? "",
-        submitterSignature: data.submitterSignature,
-        processedById: adminId, status: "PENDING",
-      },
-    }))
+    records.map(data => {
+      const category = data.category?.trim() || inferCategoryFromText(data.documentTitle, data.subject ?? "", data.particulars ?? "");
+      return prisma.record.create({
+        data: {
+          type: data.type, documentTitle: data.documentTitle,
+          documentNumber: data.documentNumber ?? "",
+          particulars: data.particulars ?? "", category,
+          fromOffice: data.fromOffice ?? "", toOffice: data.toOffice ?? "",
+          subject: data.subject ?? "", personName: data.personName,
+          personEmail: data.personEmail ?? "", personDepartment: data.personDepartment ?? "",
+          personPosition: data.personPosition ?? "",
+          documentDate: new Date(data.documentDate),
+          remarks: data.remarks ?? "",
+          submitterSignature: data.submitterSignature,
+          processedById: adminId, status: "PENDING",
+        },
+      });
+    })
   );
 
   await activityLogService.createLog({
@@ -487,7 +526,10 @@ const getStats = async () => {
   const today     = new Date(); today.setHours(0, 0, 0, 0);
   const weekStart = new Date(today); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
 
-  const [todayCount, weekCount, recentRecords] = await Promise.all([
+  const agingDate = new Date();
+  agingDate.setDate(agingDate.getDate() - 4);
+
+  const [todayCount, weekCount, recentRecords, agingPending, urgentPending, uncategorized] = await Promise.all([
     prisma.record.count({ where: { isDeleted: false, isArchived: false, createdAt: { gte: today } } }),
     prisma.record.count({ where: { isDeleted: false, isArchived: false, createdAt: { gte: weekStart } } }),
     prisma.record.findMany({
@@ -496,9 +538,32 @@ const getStats = async () => {
       take: 5,
       select: { id: true, type: true, status: true, documentTitle: true, personName: true, createdAt: true },
     }),
+    prisma.record.count({
+      where: {
+        isDeleted: false,
+        isArchived: false,
+        status: "PENDING",
+        createdAt: { lte: agingDate },
+      },
+    }),
+    prisma.record.count({ where: buildUrgentPendingWhere() }),
+    prisma.record.count({
+      where: {
+        isDeleted: false,
+        isArchived: false,
+        OR: [
+          { category: "" },
+          { category: "Other" },
+        ],
+      },
+    }),
   ]);
 
-  return { total, incoming, outgoing, pending, received, released, archived, todayCount, weekCount, recentRecords };
+  return {
+    total, incoming, outgoing, pending, received, released, archived,
+    todayCount, weekCount, recentRecords,
+    agingPending, urgentPending, uncategorized,
+  };
 };
 
 export const recordsService = {

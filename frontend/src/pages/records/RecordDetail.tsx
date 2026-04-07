@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import {
   useGetSingleRecordQuery,
@@ -7,6 +7,7 @@ import {
   useReleaseRecordMutation,
   useDeleteRecordMutation,
 } from "../../redux/api/api";
+import { getWorkflowInsight, determineRecordPriority, inferCategorySuggestion } from "../../utils/smartTagging";
 import { toast } from "react-toastify";
 import {
   FaEraser, FaCheck, FaTrash, FaInbox, FaShare, 
@@ -49,8 +50,8 @@ const Row = ({ label, value }: { label: string; value?: string | null }) => (
 );
 
 /* ── Card with header ── */
-const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+const Card = ({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) => (
+  <div className={`bg-gray-900 border border-white/5 rounded-2xl overflow-hidden ${className}`}>
     <div className="px-5 py-3 border-b border-white/5">
       <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{title}</h2>
     </div>
@@ -138,6 +139,19 @@ export default function RecordDetail() {
   const [deleteRecord,  { isLoading: deleting }]  = useDeleteRecordMutation();
 
   const record = data?.data;
+
+  const recordPriority = useMemo(
+    () => record ? determineRecordPriority(record) : "Low",
+    [record]
+  );
+  const workflowInsight = useMemo(
+    () => record ? getWorkflowInsight(record) : "No insight available.",
+    [record]
+  );
+  const suggestedCategory = useMemo(
+    () => record ? inferCategorySuggestion({ documentTitle: record.documentTitle, subject: record.subject, particulars: record.particulars }) : "",
+    [record]
+  );
 
   const handleReceive = async (d: any) => {
     try { await receiveRecord({ id: id!, ...d }).unwrap(); toast.success("Marked as received!"); setShowReceiveModal(false); }
@@ -289,38 +303,52 @@ export default function RecordDetail() {
             </div>
           </div>
 
-          {/* Comments */}
-          <CommentsSection recordId={id!} />
-        </div>
-
-        {/* RIGHT SIDEBAR */}
-        <div className="flex flex-col gap-4 xl:sticky xl:top-4">
-
-          {/* Summary */}
-          <Card title="Summary">
-            <Row label="Status"  value={record.status} />
-            <Row label="Type"    value={record.type} />
-            <Row label="Doc #"   value={record.documentNumber} />
-            <Row label="Date"    value={fmtDate(record.documentDate)} />
-            <Row label="By"      value={record.processedBy?.name || record.processedBy?.username} />
-            <Row label="From"    value={record.fromOffice} />
-            <Row label="To"      value={record.toOffice} />
-            {record.subject      && <Row label="Subject"   value={record.subject} />}
-            {record.category     && <Row label="Category"  value={record.category} />}
-          </Card>
-
-          {/* Person — grows to fill remaining sidebar height */}
-          <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex-1 flex flex-col">
-            <div className="px-5 py-3 border-b border-white/5 shrink-0">
-              <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Submitted By</h2>
-            </div>
-            <div className="px-5 py-1 flex-1">
+          {/* Submitted By — moved from right sidebar */}
+          <Card title="Submitted By">
+            <div className="space-y-1.5 h-full">
               <Row label="Name"       value={record.personName} />
               <Row label="Email"      value={record.personEmail} />
               <Row label="Department" value={record.personDepartment} />
               <Row label="Position"   value={record.personPosition} />
             </div>
-          </div>
+          </Card>
+
+          <Card title="Smart Insight" className="flex-1">
+            <div className="flex flex-col h-full justify-between space-y-3">
+              <div className="space-y-3">
+                <Row label="Priority" value={recordPriority || "Low"} />
+                <div className="py-2.5 border-b border-white/[0.04]">
+                  <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest leading-relaxed">Workflow</span>
+                  <p className="text-sm text-white mt-2 break-words">{workflowInsight || "No insight available."}</p>
+                </div>
+                {(!record.category || record.category.toLowerCase() === "other") && record.subject && (
+                  <Row label="Suggested Category" value={suggestedCategory} />
+                )}
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* RIGHT SIDEBAR */}
+        <div className="flex flex-col gap-4 xl:sticky xl:top-4 h-full">
+
+          {/* Summary */}
+          <Card title="Summary" className="overflow-hidden">
+            <div className="space-y-1.5">
+              <Row label="Status"  value={record.status} />
+              <Row label="Type"    value={record.type} />
+              <Row label="Doc #"   value={record.documentNumber} />
+              <Row label="Date"    value={fmtDate(record.documentDate)} />
+              <Row label="By"      value={record.processedBy?.name || record.processedBy?.username} />
+              <Row label="From"    value={record.fromOffice} />
+              <Row label="To"      value={record.toOffice} />
+              {record.subject      && <Row label="Subject"   value={record.subject} />}
+              {record.category     && <Row label="Category"  value={record.category} />}
+            </div>
+          </Card>
+
+          {/* Comments — moved from left column */}
+          <CommentsSection recordId={id!} />
 
         </div>
       </div>

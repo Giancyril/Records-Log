@@ -273,6 +273,39 @@ export default function Analytics() {
         ))}
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-white/10 rounded-2xl p-5 shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-gray-500">Workflow Insight</p>
+              <h3 className="text-lg font-semibold text-white mt-1">Aging Pending Records</h3>
+            </div>
+            <span className="text-2xl font-bold text-amber-400">{stats?.agingPending ?? 0}</span>
+          </div>
+          <p className="text-sm text-gray-400">Records pending more than 3 days and likely needing attention.</p>
+        </div>
+        <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-white/10 rounded-2xl p-5 shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-gray-500">Priority Signals</p>
+              <h3 className="text-lg font-semibold text-white mt-1">High Urgency</h3>
+            </div>
+            <span className="text-2xl font-bold text-rose-400">{stats?.urgentPending ?? 0}</span>
+          </div>
+          <p className="text-sm text-gray-400">Pending records with urgent language in the title or subject.</p>
+        </div>
+        <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-white/10 rounded-2xl p-5 shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-gray-500">Tagging Health</p>
+              <h3 className="text-lg font-semibold text-white mt-1">Uncategorized</h3>
+            </div>
+            <span className="text-2xl font-bold text-gray-200">{stats?.uncategorized ?? 0}</span>
+          </div>
+          <p className="text-sm text-gray-400">Records missing category tags, which smart tagging helps reduce.</p>
+        </div>
+      </div>
+
       {/* ── Volume + Growth ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
