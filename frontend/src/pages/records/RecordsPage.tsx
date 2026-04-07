@@ -116,7 +116,7 @@ export default function RecordsPage() {
     } catch (err: any) { toast.error(err?.data?.message ?? "Bulk delete failed"); }
   };
 
-  const handleBulkReceive = async (formData: { receiverSignature: string; actionTaken: string; remarks: string }) => {
+  const handleBulkReceive = async (formData: { receiverSignature: any; actionTaken: string; remarks: string }) => {
     try {
       const result: any = await bulkReceive({ ids: Array.from(selected), ...formData }).unwrap();
       toast.success(`${result.data?.received ?? selected.size} record(s) marked as received`);
@@ -125,7 +125,7 @@ export default function RecordsPage() {
     } catch (err: any) { toast.error(err?.data?.message ?? "Bulk receive failed"); }
   };
 
-  const handleBulkRelease = async (formData: { receiverSignature: string; actionTaken: string; remarks: string }) => {
+  const handleBulkRelease = async (formData: { receiverSignature: any; actionTaken: string; remarks: string }) => {
     try {
       const result: any = await bulkRelease({ ids: Array.from(selected), ...formData }).unwrap();
       toast.success(`${result.data?.released ?? selected.size} record(s) marked as released`);

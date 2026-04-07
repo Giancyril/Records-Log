@@ -4,7 +4,7 @@
 - **Updated BulkActionModal.tsx**: Changed from storing `sigRef.current.toDataURL("image/png")` to `JSON.stringify(sigRef.current.toData())` for consistency with other signature handling.
 - **Created signature.ts**: Added the missing utility file with:
   - `getSignatureData()`: Extracts stroke point arrays from the canvas
-  - `signatureToDisplay()`: Reconstructs PNG images from stored JSON data on the frontend
+  - `signatureToDisplay()`: Reconstructs PNG images from stored JSON data on the frontend, rendering the signature in white for dark UI.
 - **Cleaned up server code**: Removed the unused `server/src/app/utils/signature.ts` that was causing build errors.
 
 ## How It Works:

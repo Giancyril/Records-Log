@@ -56,7 +56,7 @@ function SignatureModal({
 }: {
   title: string;
   actionLabel: string;
-  onSubmit: (data: { receiverSignature: string; actionTaken: string; remarks: string }) => void;
+  onSubmit: (data: { receiverSignature: any; actionTaken: string; remarks: string }) => void;
   onClose: () => void;
   isLoading: boolean;
 }) {
@@ -73,7 +73,7 @@ function SignatureModal({
     // ✅ Store compact JSON path data instead of base64 PNG
     const data = sigRef.current.toData();
     onSubmit({
-      receiverSignature: JSON.stringify(data),
+      receiverSignature: data,
       actionTaken: action,
       remarks,
     });

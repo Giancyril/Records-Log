@@ -2,29 +2,41 @@
 import type { RefObject } from "react";
 import SignatureCanvas from "react-signature-canvas";
 
-export function getSignatureData(sigRef: RefObject<SignatureCanvas | null>): string {
-  if (!sigRef.current || sigRef.current.isEmpty()) return "";
-  
+type StrokePoint = { x: number; y: number; time: number };
+export type SignatureData = Array<Array<StrokePoint>>;
+
+export function getSignatureData(sigRef: RefObject<SignatureCanvas | null>): SignatureData | null {
+  if (!sigRef.current || sigRef.current.isEmpty()) return null;
+
   // Get raw point data instead of rendering to PNG
-  const data = sigRef.current.toData(); // Returns stroke point arrays
-  return JSON.stringify(data);
+  return sigRef.current.toData();
 }
 
-export function signatureToDisplay(data: string): string {
-  // Convert stored path data back to a data URL for display
+export function signatureToDisplay(data: string | SignatureData | null): string {
   if (!data) return "";
-  if (data.startsWith("data:image/")) return data; // legacy support
+  if (typeof data === "string") {
+    if (data.startsWith("data:image/")) return data; // legacy support
+    try {
+      data = JSON.parse(data);
+    } catch {
+      return "";
+    }
+  }
+
+  if (!Array.isArray(data)) return "";
   
   // Reconstruct on a temporary canvas
   const canvas = document.createElement("canvas");
   canvas.width = 400;
   canvas.height = 160;
-  const ctx = canvas.getContext("2d")!;
-  ctx.strokeStyle = "black";
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  ctx.strokeStyle = "white";
   ctx.lineWidth = 2;
   ctx.lineCap = "round";
   
-  const strokes: Array<Array<{x: number, y: number}>> = JSON.parse(data);
+  const strokes = data as SignatureData;
   strokes.forEach(stroke => {
     if (stroke.length < 2) return;
     ctx.beginPath();

@@ -1,12 +1,20 @@
 import { z } from "zod";
 
-const signatureSchema = z
-  .string()
-  .min(1, "Signature is required")
-  .refine(
-    v => v.startsWith("data:image/") || v.startsWith("["),
-    "Must be a valid signature"
-  );
+const strokePointSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  time: z.number(),
+});
+
+const signatureSchema = z.union([
+  z.string()
+    .min(1, "Signature is required")
+    .refine(
+      v => v.startsWith("data:image/") || v.startsWith("["),
+      "Must be a valid signature"
+    ),
+  z.array(z.array(strokePointSchema)).min(1),
+]);
 
 export const createRecordSchema = z.object({
   type:               z.enum(["INCOMING", "OUTGOING"]),

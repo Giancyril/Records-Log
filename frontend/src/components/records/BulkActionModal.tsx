@@ -13,7 +13,7 @@ interface BulkActionModalProps {
   count:       number;
   isLoading:   boolean;
   onClose:     () => void;
-  onSubmit:    (data: { receiverSignature: string; actionTaken: string; remarks: string }) => void;
+  onSubmit:    (data: { receiverSignature: any; actionTaken: string; remarks: string }) => void;
 }
 
 export default function BulkActionModal({
@@ -32,7 +32,7 @@ export default function BulkActionModal({
     // ✅ Store compact JSON path data instead of base64 PNG
     const data = sigRef.current.toData();
     onSubmit({
-      receiverSignature: JSON.stringify(data),
+      receiverSignature: data,
       actionTaken: action,
       remarks,
     });
