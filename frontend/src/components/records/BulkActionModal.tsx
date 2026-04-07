@@ -29,8 +29,10 @@ export default function BulkActionModal({
       toast.error("Please draw your signature.");
       return;
     }
+    // ✅ Store compact JSON path data instead of base64 PNG
+    const data = sigRef.current.toData();
     onSubmit({
-      receiverSignature: sigRef.current.toDataURL("image/png"),
+      receiverSignature: JSON.stringify(data),
       actionTaken: action,
       remarks,
     });

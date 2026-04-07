@@ -3,7 +3,10 @@ import { z } from "zod";
 const signatureSchema = z
   .string()
   .min(1, "Signature is required")
-  .refine(v => v.startsWith("data:image/"), "Must be a valid image data URI");
+  .refine(
+    v => v.startsWith("data:image/") || v.startsWith("["),
+    "Must be a valid signature"
+  );
 
 export const createRecordSchema = z.object({
   type:               z.enum(["INCOMING", "OUTGOING"]),

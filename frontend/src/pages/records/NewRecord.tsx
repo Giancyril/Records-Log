@@ -4,6 +4,7 @@ import SignatureCanvas from "react-signature-canvas";
 import { useCreateRecordMutation } from "../../redux/api/api";
 import { toast } from "react-toastify";
 import { FaCheck, FaEraser } from "react-icons/fa";
+import { getSignatureData } from "../../utils/signature"; 
 
 const todayStr = () => new Date().toISOString().split("T")[0];
 const steps = ["Doc Info", "Person", "Sign"];
@@ -14,29 +15,26 @@ const StepIndicator = ({ current }: { current: number }) => (
       <div key={i} className="flex items-center">
         <div className="flex flex-col items-center gap-1">
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
-              i < current
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${i < current
                 ? "bg-blue-600 border-blue-600 text-white"
                 : i === current
-                ? "bg-blue-600/15 border-blue-500 text-blue-400"
-                : "bg-gray-800 border-gray-700 text-gray-600"
-            }`}
+                  ? "bg-blue-600/15 border-blue-500 text-blue-400"
+                  : "bg-gray-800 border-gray-700 text-gray-600"
+              }`}
           >
             {i < current ? <FaCheck size={10} /> : i + 1}
           </div>
           <span
-            className={`text-[9px] font-medium whitespace-nowrap ${
-              i === current ? "text-blue-400" : i < current ? "text-gray-400" : "text-gray-600"
-            }`}
+            className={`text-[9px] font-medium whitespace-nowrap ${i === current ? "text-blue-400" : i < current ? "text-gray-400" : "text-gray-600"
+              }`}
           >
             {label}
           </span>
         </div>
         {i < steps.length - 1 && (
           <div
-            className={`w-10 sm:w-16 h-px mx-1 mb-4 transition-all ${
-              i < current ? "bg-blue-600" : "bg-gray-700"
-            }`}
+            className={`w-10 sm:w-16 h-px mx-1 mb-4 transition-all ${i < current ? "bg-blue-600" : "bg-gray-700"
+              }`}
           />
         )}
       </div>
@@ -50,8 +48,8 @@ const labelCls =
   "block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5";
 
 const CATEGORIES = [
-  "Memorandum","Letter","Report","Request",
-  "Certificate","Form","Notice","Other",
+  "Memorandum", "Letter", "Report", "Request",
+  "Certificate", "Form", "Notice", "Other",
 ];
 
 export default function NewRecord() {
@@ -103,7 +101,8 @@ export default function NewRecord() {
       toast.error("Please draw your signature before submitting.");
       return;
     }
-    const submitterSignature = sigRef.current.toDataURL("image/png");
+    // ✅ Store compact JSON path data instead of base64 PNG
+    const submitterSignature = getSignatureData(sigRef);
     try {
       const res: any = await createRecord({ ...form, submitterSignature }).unwrap();
       toast.success("Record created!");
@@ -117,7 +116,6 @@ export default function NewRecord() {
     <div className="w-full max-w-xl mx-auto px-0 sm:px-0 overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 px-1">
-
         <div className="min-w-0">
           <h1 className="text-lg sm:text-xl font-bold text-white leading-tight">New Record</h1>
           <p className="text-gray-500 text-xs">Step {step + 1} of {steps.length}</p>
@@ -130,7 +128,6 @@ export default function NewRecord() {
         {/* ── Step 0 — Document Info ── */}
         {step === 0 && (
           <div className="space-y-4">
-            {/* Record Type */}
             <div>
               <label className={labelCls}>Record Type *</label>
               <div className="flex gap-1 bg-gray-800 rounded-xl p-1">
@@ -139,9 +136,8 @@ export default function NewRecord() {
                     key={t}
                     type="button"
                     onClick={() => set("type", t)}
-                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                      form.type === t ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
-                    }`}
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${form.type === t ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+                      }`}
                   >
                     {t}
                   </button>
@@ -149,7 +145,6 @@ export default function NewRecord() {
               </div>
             </div>
 
-            {/* Document Title */}
             <div>
               <label className={labelCls}>Document Title *</label>
               <input
@@ -163,7 +158,6 @@ export default function NewRecord() {
               )}
             </div>
 
-            {/* Doc Number + Category — stack on very small screens */}
             <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Document Number</label>
@@ -189,7 +183,6 @@ export default function NewRecord() {
               </div>
             </div>
 
-            {/* Subject */}
             <div>
               <label className={labelCls}>Subject</label>
               <input
@@ -200,7 +193,6 @@ export default function NewRecord() {
               />
             </div>
 
-            {/* Particulars */}
             <div>
               <label className={labelCls}>Particulars / Description</label>
               <textarea
@@ -212,7 +204,6 @@ export default function NewRecord() {
               />
             </div>
 
-            {/* Document Date */}
             <div>
               <label className={labelCls}>Document Date *</label>
               <input
@@ -226,7 +217,6 @@ export default function NewRecord() {
               )}
             </div>
 
-            {/* Remarks */}
             <div>
               <label className={labelCls}>Remarks</label>
               <input
@@ -255,7 +245,6 @@ export default function NewRecord() {
               )}
             </div>
 
-            {/* Email + Position — stack on very small screens */}
             <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Email</label>
@@ -319,7 +308,6 @@ export default function NewRecord() {
         {/* ── Step 2 — Signature ── */}
         {step === 2 && (
           <div className="space-y-4">
-            {/* Summary */}
             <div className="bg-gray-800/50 border border-white/5 rounded-xl px-4 py-3 text-xs text-gray-400 space-y-2">
               <div className="flex justify-between items-start gap-2">
                 <span className="text-gray-500 shrink-0">Title</span>
@@ -330,11 +318,10 @@ export default function NewRecord() {
               <div className="flex justify-between items-center gap-2">
                 <span className="text-gray-500 shrink-0">Type</span>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                    form.type === "INCOMING"
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${form.type === "INCOMING"
                       ? "bg-purple-500/15 text-purple-400 border-purple-500/20"
                       : "bg-cyan-500/15 text-cyan-400 border-cyan-500/20"
-                  }`}
+                    }`}
                 >
                   {form.type}
                 </span>
@@ -349,7 +336,6 @@ export default function NewRecord() {
               </div>
             </div>
 
-            {/* Signature pad */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={`${labelCls} mb-0`}>Submitter Signature *</label>
@@ -379,7 +365,6 @@ export default function NewRecord() {
               </p>
             </div>
 
-            {/* Disclaimer */}
             <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl px-4 py-3">
               <p className="text-amber-300/80 text-xs leading-relaxed">
                 By signing, the submitter confirms that the information provided is accurate and
@@ -404,7 +389,7 @@ export default function NewRecord() {
               onClick={next}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-all"
             >
-              Continue 
+              Continue
             </button>
           ) : (
             <button
@@ -412,7 +397,7 @@ export default function NewRecord() {
               disabled={isLoading || !sigDone}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold transition-all"
             >
-              {isLoading ? "Saving..." : <> Save Record</>}
+              {isLoading ? "Saving..." : <>Save Record</>}
             </button>
           )}
         </div>

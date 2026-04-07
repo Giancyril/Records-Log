@@ -82,8 +82,10 @@ model Record {
   remarks            String          @default("")
   actionTaken        String          @default("")
 
-  submitterSignature String?
-  receiverSignature  String?
+  // Stored as JSON string of stroke point arrays from SignatureCanvas.toData()
+  // e.g. [[{x,y,time},{x,y,time}],[{x,y,time},...]] — ~200-800 bytes vs 10-50KB for base64 PNG
+  submitterSignature Json?
+  receiverSignature  Json?
 
   processedById      String?
   processedBy        User?           @relation("ProcessedBy", fields: [processedById], references: [id])
@@ -101,15 +103,15 @@ model Record {
 }
 
 model RecordComment {
-  id        String   @id @default(uuid())
-  content   String
-  recordId  String
-  record    Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
-  authorId  String?
-  author    User?    @relation("CommentAuthor", fields: [authorId], references: [id])
-  authorName String  @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  content    String
+  recordId   String
+  record     Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     User?    @relation("CommentAuthor", fields: [authorId], references: [id])
+  authorName String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@map("record_comments")
 }

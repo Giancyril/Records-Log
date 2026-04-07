@@ -14,6 +14,7 @@ import {
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useConfirm } from "../../hooks/useConfirm";
 import CommentsSection from "../../components/records/CommentsSection";
+import { signatureToDisplay } from "../../utils/signature";
 
 const fmt = (d?: string | null) =>
   d
@@ -69,8 +70,10 @@ function SignatureModal({
       toast.error("Please draw your signature.");
       return;
     }
+    // ✅ Store compact JSON path data instead of base64 PNG
+    const data = sigRef.current.toData();
     onSubmit({
-      receiverSignature: sigRef.current.toDataURL("image/png"),
+      receiverSignature: JSON.stringify(data),
       actionTaken: action,
       remarks,
     });
@@ -222,6 +225,10 @@ export default function RecordDetail() {
     </div>
   );
 
+  // ✅ Resolve signature display URLs once — handles both legacy base64 and new JSON path format
+  const submitterSigUrl = signatureToDisplay(record.submitterSignature ?? "");
+  const receiverSigUrl  = signatureToDisplay(record.receiverSignature  ?? "");
+
   return (
     <div className="max-w-2xl mx-auto w-full space-y-4 overflow-x-hidden">
       <ConfirmDialog
@@ -243,6 +250,7 @@ export default function RecordDetail() {
         />
       )}
 
+      {/* ✅ Signature lightbox — uses resolved display URLs */}
       {showSig && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
@@ -253,7 +261,7 @@ export default function RecordDetail() {
               {showSig === "submitter" ? "Submitter" : "Receiver"} Signature
             </p>
             <img
-              src={showSig === "submitter" ? record.submitterSignature! : record.receiverSignature!}
+              src={showSig === "submitter" ? submitterSigUrl : receiverSigUrl}
               alt="Signature"
               className="w-full rounded-xl bg-gray-800"
             />
@@ -391,7 +399,7 @@ export default function RecordDetail() {
         </div>
       )}
 
-      {/* Signatures */}
+      {/* Signatures — ✅ use resolved display URLs */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/5">
           <h2 className="text-sm font-bold text-white">Signatures</h2>
@@ -399,12 +407,12 @@ export default function RecordDetail() {
         <div className="p-5 grid grid-cols-2 gap-4">
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Submitter</p>
-            {record.submitterSignature ? (
+            {submitterSigUrl ? (
               <button
                 onClick={() => setShowSig("submitter")}
                 className="w-full h-20 rounded-xl bg-gray-800 border border-white/5 overflow-hidden hover:border-blue-500/30 transition-colors"
               >
-                <img src={record.submitterSignature} alt="Submitter sig" className="w-full h-full object-contain" />
+                <img src={submitterSigUrl} alt="Submitter sig" className="w-full h-full object-contain" />
               </button>
             ) : (
               <div className="w-full h-20 rounded-xl bg-gray-800 border border-white/5 flex items-center justify-center">
@@ -414,12 +422,12 @@ export default function RecordDetail() {
           </div>
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Receiver</p>
-            {record.receiverSignature ? (
+            {receiverSigUrl ? (
               <button
                 onClick={() => setShowSig("receiver")}
                 className="w-full h-20 rounded-xl bg-gray-800 border border-white/5 overflow-hidden hover:border-blue-500/30 transition-colors"
               >
-                <img src={record.receiverSignature} alt="Receiver sig" className="w-full h-full object-contain" />
+                <img src={receiverSigUrl} alt="Receiver sig" className="w-full h-full object-contain" />
               </button>
             ) : (
               <div className="w-full h-20 rounded-xl bg-gray-800 border border-white/5 flex items-center justify-center">
@@ -430,7 +438,7 @@ export default function RecordDetail() {
         </div>
       </div>
 
-      {/* ── Comments ── */}
+      {/* Comments */}
       <CommentsSection recordId={id!} />
 
       <div className="h-4" />
