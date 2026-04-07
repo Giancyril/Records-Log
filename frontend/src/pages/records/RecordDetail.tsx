@@ -348,7 +348,7 @@ export default function RecordDetail() {
           </Card>
 
           {/* Comments — moved from left column */}
-          <CommentsSection recordId={id!} />
+          <CommentsSection recordId={id!} className="flex-1" />
 
         </div>
       </div>

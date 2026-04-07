@@ -10,7 +10,7 @@ const fmtTime = (d: string) =>
     hour: "numeric", minute: "2-digit", hour12: true,
   });
 
-export default function CommentsSection({ recordId }: { recordId: string }) {
+export default function CommentsSection({ recordId, className = "" }: { recordId: string; className?: string }) {
   const [content, setContent] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,7 +42,7 @@ export default function CommentsSection({ recordId }: { recordId: string }) {
   };
 
   return (
-    <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+    <div className={`bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col ${className}`}>
       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
         <h2 className="text-sm font-bold text-white">Internal Notes</h2>
         <span className="px-2 py-0.5 bg-white/5 border border-white/8 text-gray-400 text-[10px] font-bold rounded-lg">
@@ -51,7 +51,7 @@ export default function CommentsSection({ recordId }: { recordId: string }) {
       </div>
 
       {/* Comment list */}
-      <div className="divide-y divide-white/[0.04]">
+      <div className="divide-y divide-white/[0.04] flex-1 overflow-y-auto flex flex-col">
         {isLoading ? (
           <div className="p-5 space-y-3">
             {[...Array(2)].map((_, i) => (
@@ -59,8 +59,8 @@ export default function CommentsSection({ recordId }: { recordId: string }) {
             ))}
           </div>
         ) : comments.length === 0 ? (
-          <div className="py-5 text-center min-h-[110px]">
-            <p className="text-gray-600 text-xs">No notes yet. Add the first one below.</p>
+          <div className="flex-1 flex flex-col items-center justify-center py-10 text-center">
+            <p className="text-gray-600 text-xs italic">No notes yet. Add the first one below.</p>
           </div>
         ) : (
           comments.map((c) => (
