@@ -230,7 +230,7 @@ export default function Analytics() {
           </p>
         </div>
 
-        <div className="flex gap-2 bg-gray-900/60 border border-white/8 rounded-xl p-1.5 backdrop-blur-sm">
+        <div className="flex gap-2 bg-gray-900/60 rounded-xl p-1.5 backdrop-blur-sm">
           {(["day", "week", "month"] as Granularity[]).map(g => (
             <button
               key={g}
