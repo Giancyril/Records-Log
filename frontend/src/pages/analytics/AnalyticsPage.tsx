@@ -274,35 +274,90 @@ export default function Analytics() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-white/10 rounded-2xl p-5 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500">Workflow Insight</p>
-              <h3 className="text-lg font-semibold text-white mt-1">Aging Pending Records</h3>
+        {/* Aging Pending */}
+        <div className="bg-gray-900 border border-white/10 rounded-2xl p-5 flex flex-col gap-3 hover:border-white/20 transition-colors duration-200">
+          <div className="flex items-start justify-between">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6.5" stroke="#f59e0b" strokeWidth="1.2"/>
+                <line x1="8" y1="4.5" x2="8" y2="8.5" stroke="#f59e0b" strokeWidth="1.4" strokeLinecap="round"/>
+                <circle cx="8" cy="10.5" r="0.8" fill="#f59e0b"/>
+              </svg>
             </div>
-            <span className="text-2xl font-bold text-amber-400">{stats?.agingPending ?? 0}</span>
+            <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              Needs attention
+            </span>
           </div>
-          <p className="text-sm text-gray-400">Records pending more than 3 days and likely needing attention.</p>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Workflow Insight</p>
+            <p className="text-sm font-semibold text-white mt-0.5">Aging Pending Records</p>
+          </div>
+          <div className="h-px bg-white/5" />
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-amber-400">{stats?.agingPending ?? 0}</span>
+            <span className="text-xs text-gray-600">records</span>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Pending more than 3 days and likely needing attention.
+          </p>
         </div>
-        <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-white/10 rounded-2xl p-5 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500">Priority Signals</p>
-              <h3 className="text-lg font-semibold text-white mt-1">High Urgency</h3>
+
+        {/* High Urgency */}
+        <div className="bg-gray-900 border border-white/10 rounded-2xl p-5 flex flex-col gap-3 hover:border-white/20 transition-colors duration-200">
+          <div className="flex items-start justify-between">
+            <div className="w-9 h-9 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2L10.2 6.5L15 7.2L11.5 10.6L12.4 15.4L8 13L3.6 15.4L4.5 10.6L1 7.2L5.8 6.5L8 2Z"
+                  stroke="#f43f5e" strokeWidth="1.2" strokeLinejoin="round"/>
+              </svg>
             </div>
-            <span className="text-2xl font-bold text-rose-400">{stats?.urgentPending ?? 0}</span>
+            <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              High urgency
+            </span>
           </div>
-          <p className="text-sm text-gray-400">Pending records with urgent language in the title or subject.</p>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Priority Signals</p>
+            <p className="text-sm font-semibold text-white mt-0.5">Urgent Records</p>
+          </div>
+          <div className="h-px bg-white/5" />
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-rose-400">{stats?.urgentPending ?? 0}</span>
+            <span className="text-xs text-gray-600">records</span>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Pending records with urgent language in the title or subject.
+          </p>
         </div>
-        <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-white/10 rounded-2xl p-5 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500">Tagging Health</p>
-              <h3 className="text-lg font-semibold text-white mt-1">Uncategorized</h3>
+
+        {/* Uncategorized */}
+        <div className="bg-gray-900 border border-white/10 rounded-2xl p-5 flex flex-col gap-3 hover:border-white/20 transition-colors duration-200">
+          <div className="flex items-start justify-between">
+            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3" width="12" height="2" rx="1" fill="#6b7280"/>
+                <rect x="2" y="7" width="8" height="2" rx="1" fill="#6b7280"/>
+                <rect x="2" y="11" width="5" height="2" rx="1" fill="#6b7280"/>
+                <circle cx="13" cy="12" r="2.2" stroke="#6b7280" strokeWidth="1.2"/>
+                <line x1="13" y1="10.5" x2="13" y2="12" stroke="#6b7280" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="13" y1="12" x2="14" y2="12.8" stroke="#6b7280" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
             </div>
-            <span className="text-2xl font-bold text-gray-200">{stats?.uncategorized ?? 0}</span>
+            <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-white/5 text-gray-400 border border-white/10">
+              Tagging health
+            </span>
           </div>
-          <p className="text-sm text-gray-400">Records missing category tags, which smart tagging helps reduce.</p>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Tagging Health</p>
+            <p className="text-sm font-semibold text-white mt-0.5">Uncategorized</p>
+          </div>
+          <div className="h-px bg-white/5" />
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-gray-300">{stats?.uncategorized ?? 0}</span>
+            <span className="text-xs text-gray-600">records</span>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Records missing category tags — smart tagging helps reduce this.
+          </p>
         </div>
       </div>
 
