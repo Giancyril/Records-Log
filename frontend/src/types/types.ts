@@ -100,3 +100,24 @@ export interface RecordStats {
   urgentPending: number;
   uncategorized: number;
 }
+
+export interface RecordTemplate {
+  id:               string;
+  name:             string;
+  type:             RecordType;
+  documentTitle:    string;
+  documentNumber:   string;
+  particulars:      string;
+  category:         string;
+  subject:          string;
+  fromOffice:       string;
+  toOffice:         string;
+  personName:       string;
+  personEmail:      string;
+  personDepartment: string;
+  personPosition:   string;
+  remarks:          string;
+  createdById:      string;
+  createdAt:        string;
+  updatedAt:        string;
+}

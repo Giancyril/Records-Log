@@ -1,11 +1,17 @@
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SignatureCanvas from "react-signature-canvas";
-import { useCreateRecordMutation } from "../../redux/api/api";
+import {
+  useCreateRecordMutation,
+  useGetTemplatesQuery,
+  useCreateTemplateMutation,
+  useDeleteTemplateMutation,
+} from "../../redux/api/api";
 import { toast } from "react-toastify";
-import { FaCheck, FaEraser, FaArrowLeft } from "react-icons/fa";
+import { FaCheck, FaEraser,  FaLayerGroup, FaTrash, FaSave } from "react-icons/fa";
 import { getSignatureData } from "../../utils/signature";
 import { inferCategorySuggestion } from "../../utils/smartTagging";
+import type { RecordTemplate } from "../../types/types";
 
 const todayStr = () => new Date().toISOString().split("T")[0];
 const steps = ["Document", "Person & Office", "Sign & Submit"];
@@ -20,12 +26,10 @@ const inputCls =
 const labelCls =
   "block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5";
 
-/* ── Two-col grid helper ── */
 const Grid = ({ children }: { children: React.ReactNode }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{children}</div>
 );
 
-/* ── Field wrapper ── */
 const Field = ({
   label, required, error, children, full,
 }: {
@@ -40,7 +44,6 @@ const Field = ({
   </div>
 );
 
-/* ── Step indicator ── */
 const StepIndicator = ({ current }: { current: number }) => (
   <div className="flex items-center justify-center mb-8">
     {steps.map((label, i) => (
@@ -65,13 +68,141 @@ const StepIndicator = ({ current }: { current: number }) => (
   </div>
 );
 
+// ── Template drawer ───────────────────────────────────────────────────────────
+function TemplateDrawer({
+  onApply, onClose,
+}: {
+  onApply: (t: RecordTemplate) => void;
+  onClose: () => void;
+}) {
+  const { data, isLoading }               = useGetTemplatesQuery(undefined);
+  const [deleteTemplate, { isLoading: deleting }] = useDeleteTemplateMutation();
+  const templates: RecordTemplate[]       = data?.data ?? [];
+
+  const handleDelete = async (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Delete template "${name}"?`)) return;
+    try {
+      await deleteTemplate(id).unwrap();
+      toast.success("Template deleted");
+    } catch {
+      toast.error("Failed to delete template");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-gray-900 border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
+          <div className="flex items-center gap-2">
+            <FaLayerGroup size={12} className="text-blue-400" />
+            <h3 className="text-sm font-bold text-white">Use a Template</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white text-lg leading-none transition-colors">✕</button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-4 space-y-2">
+          {isLoading && (
+            <div className="space-y-2">
+              {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-800 rounded-xl animate-pulse" />)}
+            </div>
+          )}
+          {!isLoading && templates.length === 0 && (
+            <div className="text-center py-10">
+              <FaLayerGroup size={24} className="text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No templates yet.</p>
+              <p className="text-gray-600 text-xs mt-1">Fill out the form and save it as a template.</p>
+            </div>
+          )}
+          {templates.map(t => (
+            <button key={t.id} onClick={() => onApply(t)}
+              className="w-full text-left p-4 bg-gray-800/60 hover:bg-gray-800 border border-white/5 hover:border-white/10 rounded-xl transition-all group">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{t.name}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      t.type === "INCOMING"
+                        ? "bg-purple-500/15 text-purple-400 border-purple-500/20"
+                        : "bg-cyan-500/15 text-cyan-400 border-cyan-500/20"
+                    }`}>{t.type}</span>
+                    {t.category && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 border border-white/5">
+                        {t.category}
+                      </span>
+                    )}
+                    {t.fromOffice && (
+                      <span className="text-[10px] text-gray-500 truncate max-w-[140px]">
+                        {t.fromOffice} → {t.toOffice || "—"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => handleDelete(t.id, t.name, e)}
+                  disabled={deleting}
+                  className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center text-red-400 transition-all shrink-0"
+                >
+                  <FaTrash size={9} />
+                </button>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Save template modal ───────────────────────────────────────────────────────
+function SaveTemplateModal({
+  onSave, onClose, isLoading,
+}: {
+  onSave: (name: string) => void;
+  onClose: () => void;
+  isLoading: boolean;
+}) {
+  const [name, setName] = useState("");
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl p-5">
+        <h3 className="text-sm font-bold text-white mb-1">Save as Template</h3>
+        <p className="text-xs text-gray-500 mb-4">Give this template a name so you can reuse it later.</p>
+        <input
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && name.trim() && onSave(name.trim())}
+          placeholder="e.g. Student Leave Request"
+          className={inputCls}
+          autoFocus
+        />
+        <div className="flex gap-2 mt-4">
+          <button onClick={onClose}
+            className="flex-1 py-2.5 border border-white/8 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
+            Cancel
+          </button>
+          <button
+            onClick={() => name.trim() && onSave(name.trim())}
+            disabled={isLoading || !name.trim()}
+            className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all">
+            {isLoading ? "Saving..." : "Save Template"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function NewRecord() {
   const navigate = useNavigate();
-  const sigRef = useRef<SignatureCanvas>(null);
+  const sigRef   = useRef<SignatureCanvas>(null);
 
-  const [step, setStep]     = useState(0);
+  const [step, setStep]       = useState(0);
   const [sigDone, setSigDone] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors]   = useState<Record<string, string>>({});
+  const [showTemplates, setShowTemplates]       = useState(false);
+  const [showSaveModal, setShowSaveModal]       = useState(false);
 
   const [form, setForm] = useState({
     type: "INCOMING" as "INCOMING" | "OUTGOING",
@@ -99,8 +230,41 @@ export default function NewRecord() {
     [form.documentTitle, form.subject, form.particulars]
   );
 
-  const [createRecord, { isLoading }] = useCreateRecordMutation();
+  const [createRecord,   { isLoading }]          = useCreateRecordMutation();
+  const [createTemplate, { isLoading: saving }]  = useCreateTemplateMutation();
+
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+  const applyTemplate = (t: RecordTemplate) => {
+    setForm(f => ({
+      ...f,
+      type:             t.type as "INCOMING" | "OUTGOING",
+      documentTitle:    t.documentTitle,
+      documentNumber:   t.documentNumber,
+      particulars:      t.particulars,
+      category:         t.category,
+      subject:          t.subject,
+      fromOffice:       t.fromOffice,
+      toOffice:         t.toOffice,
+      personName:       t.personName,
+      personEmail:      t.personEmail,
+      personDepartment: t.personDepartment,
+      personPosition:   t.personPosition,
+      remarks:          t.remarks,
+    }));
+    setShowTemplates(false);
+    toast.success(`Template "${t.name}" applied`);
+  };
+
+  const handleSaveTemplate = async (name: string) => {
+    try {
+      await createTemplate({ name, ...form }).unwrap();
+      toast.success(`Template "${name}" saved`);
+      setShowSaveModal(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to save template");
+    }
+  };
 
   const validateStep = (s: number) => {
     const e: Record<string, string> = {};
@@ -140,16 +304,39 @@ export default function NewRecord() {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
+      {showTemplates && (
+        <TemplateDrawer onApply={applyTemplate} onClose={() => setShowTemplates(false)} />
+      )}
+      {showSaveModal && (
+        <SaveTemplateModal
+          onSave={handleSaveTemplate}
+          onClose={() => setShowSaveModal(false)}
+          isLoading={saving}
+        />
+      )}
 
       {/* Page header */}
-      <div className="flex items-center gap-3 mb-5">
-        <button onClick={() => navigate("/records")}
-          className="w-8 h-8 rounded-xl bg-gray-900 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-colors shrink-0">
-          <FaArrowLeft size={10} />
-        </button>
-        <div>
-          <h1 className="text-lg font-bold text-white">New Record</h1>
-          <p className="text-gray-500 text-xs">Step {step + 1} of {steps.length} — {steps[step]}</p>
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+      
+          <div>
+            <h1 className="text-lg font-bold text-white">New Record</h1>
+            <p className="text-gray-500 text-xs">Step {step + 1} of {steps.length} — {steps[step]}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowSaveModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/8 text-gray-400 hover:text-white text-xs font-semibold rounded-xl transition-all"
+          >
+            <FaSave size={10} /> Save as Template
+          </button>
+          <button
+            onClick={() => setShowTemplates(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-xs font-semibold rounded-xl transition-all"
+          >
+            <FaLayerGroup size={10} /> Use Template
+          </button>
         </div>
       </div>
 
@@ -159,8 +346,6 @@ export default function NewRecord() {
         {/* ══ Step 0 — Document Info ══ */}
         {step === 0 && (
           <div className="space-y-4">
-
-            {/* Type toggle */}
             <div>
               <label className={labelCls}>Record Type</label>
               <div className="flex gap-1 p-1 bg-gray-800 rounded-xl">
@@ -175,13 +360,11 @@ export default function NewRecord() {
               </div>
             </div>
 
-            {/* Title — full width */}
             <Field label="Document Title" required error={errors.documentTitle}>
               <input value={form.documentTitle} onChange={e => set("documentTitle", e.target.value)}
                 placeholder="e.g. Request for Leave of Absence" className={inputCls} />
             </Field>
 
-            {/* Row: Doc # + Category */}
             <Grid>
               <Field label="Document Number">
                 <input value={form.documentNumber} onChange={e => set("documentNumber", e.target.value)}
@@ -205,7 +388,6 @@ export default function NewRecord() {
               </Field>
             </Grid>
 
-            {/* Row: Subject + Date */}
             <Grid>
               <Field label="Subject">
                 <input value={form.subject} onChange={e => set("subject", e.target.value)}
@@ -217,32 +399,26 @@ export default function NewRecord() {
               </Field>
             </Grid>
 
-            {/* Particulars — full width */}
             <Field label="Particulars / Description">
               <textarea rows={2} value={form.particulars} onChange={e => set("particulars", e.target.value)}
                 placeholder="Details about the document..." className={`${inputCls} resize-none`} />
             </Field>
 
-            {/* Remarks — full width */}
             <Field label="Remarks">
               <input value={form.remarks} onChange={e => set("remarks", e.target.value)}
                 placeholder="Any additional notes" className={inputCls} />
             </Field>
-
           </div>
         )}
 
         {/* ══ Step 1 — Person & Office ══ */}
         {step === 1 && (
           <div className="space-y-4">
-
-            {/* Person Name — full width */}
             <Field label="Person Name" required error={errors.personName}>
               <input value={form.personName} onChange={e => set("personName", e.target.value)}
                 placeholder=" " className={inputCls} />
             </Field>
 
-            {/* Row: Email + Position */}
             <Grid>
               <Field label="Email">
                 <input type="email" value={form.personEmail} onChange={e => set("personEmail", e.target.value)}
@@ -254,13 +430,11 @@ export default function NewRecord() {
               </Field>
             </Grid>
 
-            {/* Department — full width */}
             <Field label="Department / Section">
               <input value={form.personDepartment} onChange={e => set("personDepartment", e.target.value)}
                 placeholder="e.g. College of Engineering" className={inputCls} />
             </Field>
 
-            {/* Divider */}
             <div className="border-t border-white/5 pt-1">
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Office Routing</p>
               <Grid>
@@ -274,29 +448,26 @@ export default function NewRecord() {
                 </Field>
               </Grid>
             </div>
-
           </div>
         )}
 
         {/* ══ Step 2 — Review & Sign ══ */}
         {step === 2 && (
           <div className="space-y-4">
-
-            {/* Summary */}
             <div className="bg-gray-800/50 border border-white/5 rounded-xl overflow-hidden">
               <div className="px-4 py-2.5 border-b border-white/5">
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Review</p>
               </div>
               <div className="divide-y divide-white/[0.04]">
                 {[
-                  { label: "Title",       value: form.documentTitle },
-                  { label: "Type",        value: form.type },
-                  { label: "Category",    value: form.category || "—" },
-                  { label: "Date",        value: form.documentDate },
-                  { label: "Person",      value: form.personName },
-                  { label: "Department",  value: form.personDepartment || "—" },
-                  { label: "From",        value: form.fromOffice || "—" },
-                  { label: "To",          value: form.toOffice || "—" },
+                  { label: "Title",      value: form.documentTitle },
+                  { label: "Type",       value: form.type },
+                  { label: "Category",   value: form.category || "—" },
+                  { label: "Date",       value: form.documentDate },
+                  { label: "Person",     value: form.personName },
+                  { label: "Department", value: form.personDepartment || "—" },
+                  { label: "From",       value: form.fromOffice || "—" },
+                  { label: "To",         value: form.toOffice || "—" },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-start justify-between gap-4 px-4 py-2">
                     <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest shrink-0 pt-px">{label}</span>
@@ -306,7 +477,6 @@ export default function NewRecord() {
               </div>
             </div>
 
-            {/* Signature */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={`${labelCls} mb-0`}>
@@ -325,13 +495,11 @@ export default function NewRecord() {
               <p className="text-gray-600 text-[10px] mt-1.5 text-center">Draw with finger or mouse</p>
             </div>
 
-            {/* Disclaimer */}
             <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl px-4 py-3">
               <p className="text-amber-300/70 text-xs leading-relaxed">
                 By signing, you confirm that all information provided is accurate and the document has been officially submitted.
               </p>
             </div>
-
           </div>
         )}
 

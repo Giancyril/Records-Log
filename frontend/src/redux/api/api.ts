@@ -117,6 +117,24 @@ const api = baseApi.injectEndpoints({
       invalidatesTags: ["comments", "activityLogs"],
     }),
 
+    // ── Templates ─────────────────────────────────────────────────────────────────
+    getTemplates: build.query({
+      query: () => "/templates",
+      providesTags: ["templates"],
+    }),
+    createTemplate: build.mutation({
+      query: (body) => ({ url: "/templates", method: "POST", body }),
+      invalidatesTags: ["templates"],
+    }),
+    updateTemplate: build.mutation({
+      query: ({ id, ...body }) => ({ url: `/templates/${id}`, method: "PUT", body }),
+      invalidatesTags: ["templates"],
+    }),
+    deleteTemplate: build.mutation({
+      query: (id: string) => ({ url: `/templates/${id}`, method: "DELETE" }),
+      invalidatesTags: ["templates"],
+    }),
+
     // ── Activity Logs ─────────────────────────────────────────────────────
     getActivityLogs: build.query({
       query: (params) => ({ url: "/activity-logs", params }),
@@ -165,4 +183,8 @@ export const {
   useGetActivityLogsQuery,
   useClearActivityLogsMutation,
   useGetNotificationsQuery,
+  useGetTemplatesQuery,
+  useCreateTemplateMutation,
+  useUpdateTemplateMutation,
+  useDeleteTemplateMutation,
 } = api;

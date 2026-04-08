@@ -51,9 +51,14 @@ model User {
   records      Record[]        @relation("ProcessedBy")
   activityLogs ActivityLog[]   @relation("ActivityLogAdmin")
   comments     RecordComment[] @relation("CommentAuthor")
+  
+  // This must match the name in RecordTemplate
+  recordTemplates RecordTemplate[] @relation("UserTemplates")
 
   @@map("users")
 }
+
+
 
 model Record {
   id                 String          @id @default(uuid())
@@ -129,4 +134,26 @@ model ActivityLog {
   createdAt  DateTime       @default(now())
 
   @@map("activityLogs")
+}
+
+model RecordTemplate {
+  id               String   @id @default(cuid())
+  name             String
+  type             String   @default("INCOMING")
+  documentTitle    String   @default("")
+  documentNumber   String   @default("")
+  particulars      String   @default("")
+  category         String   @default("")
+  subject          String   @default("")
+  fromOffice       String   @default("")
+  toOffice         String   @default("")
+  personName       String   @default("")
+  personEmail      String   @default("")
+  personDepartment String   @default("")
+  personPosition   String   @default("")
+  remarks          String   @default("")
+  createdById      String
+  createdBy  User  @relation("UserTemplates", fields: [createdById], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

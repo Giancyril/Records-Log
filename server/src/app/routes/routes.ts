@@ -3,6 +3,7 @@ import auth from "../middlewares/auth";
 import { authController }        from "../modules/auth/auth.controller";
 import { recordsController }     from "../modules/records/records.controller";
 import { activityLogController } from "../modules/activityLog/activityLog.controller";
+import { templatesController } from "../modules/templates/templates.controller";
 
 const router = Router();
 
@@ -42,5 +43,12 @@ router.delete("/records/:id/comments/:commentId",   auth, recordsController.dele
 // ── Activity Logs ─────────────────────────────────────────────────────────────
 router.get   ("/activity-logs", auth, activityLogController.getLogs);
 router.delete("/activity-logs", auth, activityLogController.clearAll);
+
+// ── Templates ─────────────────────────────────────────────────────────────────
+router.get   ("/templates",     auth, templatesController.getTemplates);
+router.post  ("/templates",     auth, templatesController.createTemplate);
+router.put   ("/templates/:id", auth, templatesController.updateTemplate);
+router.delete("/templates/:id", auth, templatesController.deleteTemplate);
+router.delete("/templates/:id", auth, templatesController.deleteTemplate);
 
 export default router;
