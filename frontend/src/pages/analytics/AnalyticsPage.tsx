@@ -560,7 +560,7 @@ export default function Analytics() {
             { label: "Received", value: stats?.received ?? 0, icon: FaCheckCircle, color: C.blue },
             { label: "Released", value: stats?.released ?? 0, icon: FaBoxOpen,     color: C.emerald },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="text-center p-4 rounded-xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] border border-white/8 hover:border-white/15 transition-all duration-300 group">
+            <div key={label} className="text-center p-4 rounded-xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] border border-gray-700 hover:border-gray-600 transition-all duration-300 group">
               <div className="flex justify-center mb-3">
                 <Icon size={16} className="group-hover:scale-110 transition-transform duration-300" style={{ color }} />
               </div>

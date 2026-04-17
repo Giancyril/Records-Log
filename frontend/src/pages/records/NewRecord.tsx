@@ -12,6 +12,7 @@ import { FaCheck, FaEraser,  FaLayerGroup, FaTrash, FaSave } from "react-icons/f
 import { getSignatureData } from "../../utils/signature";
 import { inferCategorySuggestion } from "../../utils/smartTagging";
 import type { RecordTemplate } from "../../types/types";
+import CustomDatePicker from "../../components/ui/CustomDatePicker";
 
 const todayStr = () => new Date().toISOString().split("T")[0];
 const steps = ["Document", "Person & Office", "Sign & Submit"];
@@ -22,7 +23,7 @@ const CATEGORIES = [
 ];
 
 const inputCls =
-  "w-full px-3.5 py-2.5 bg-gray-800 border border-white/8 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all";
+  "w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all";
 const labelCls =
   "block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5";
 
@@ -52,7 +53,7 @@ const StepIndicator = ({ current }: { current: number }) => (
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
             i < current  ? "bg-blue-600 border-blue-600 text-white"
             : i === current ? "bg-blue-600/10 border-blue-500 text-blue-400"
-            : "bg-gray-800 border-white/8 text-gray-600"
+            : "bg-gray-800 border-gray-700 text-gray-600"
           }`}>
             {i < current ? <FaCheck size={10} /> : i + 1}
           </div>
@@ -61,7 +62,7 @@ const StepIndicator = ({ current }: { current: number }) => (
           }`}>{label}</span>
         </div>
         {i < steps.length - 1 && (
-          <div className={`w-12 sm:w-20 h-px mx-2 mb-5 transition-all ${i < current ? "bg-blue-600/50" : "bg-white/5"}`} />
+          <div className={`w-12 sm:w-20 h-px mx-2 mb-5 transition-all ${i < current ? "bg-blue-600/50" : "bg-gray-700"}`} />
         )}
       </div>
     ))}
@@ -91,9 +92,9 @@ function TemplateDrawer({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className="bg-gray-900 border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full sm:max-w-md shadow-2xl max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-600 shrink-0">
           <div className="flex items-center gap-2">
             <FaLayerGroup size={12} className="text-blue-400" />
             <h3 className="text-sm font-bold text-white">Use a Template</h3>
@@ -115,8 +116,9 @@ function TemplateDrawer({
             </div>
           )}
           {templates.map(t => (
-            <button key={t.id} onClick={() => onApply(t)}
-              className="w-full text-left p-4 bg-gray-800/60 hover:bg-gray-800 border border-white/5 hover:border-white/10 rounded-xl transition-all group">
+            <div key={t.id} role="button" tabIndex={0} onClick={() => onApply(t)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onApply(t); } }}
+              className="w-full text-left p-4 bg-gray-800/60 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl transition-all group cursor-pointer">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{t.name}</p>
@@ -127,7 +129,7 @@ function TemplateDrawer({
                         : "bg-cyan-500/15 text-cyan-400 border-cyan-500/20"
                     }`}>{t.type}</span>
                     {t.category && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 border border-white/5">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 border border-gray-700">
                         {t.category}
                       </span>
                     )}
@@ -146,7 +148,7 @@ function TemplateDrawer({
                   <FaTrash size={9} />
                 </button>
               </div>
-            </button>
+            </div>
           ))}
         </div>
       </div>
@@ -165,7 +167,7 @@ function SaveTemplateModal({
   const [name, setName] = useState("");
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl p-5">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl p-5">
         <h3 className="text-sm font-bold text-white mb-1">Save as Template</h3>
         <p className="text-xs text-gray-500 mb-4">Give this template a name so you can reuse it later.</p>
         <input
@@ -178,7 +180,7 @@ function SaveTemplateModal({
         />
         <div className="flex gap-2 mt-4">
           <button onClick={onClose}
-            className="flex-1 py-2.5 border border-white/8 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
+            className="flex-1 py-2.5 border border-gray-700 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
             Cancel
           </button>
           <button
@@ -324,16 +326,16 @@ export default function NewRecord() {
             <p className="text-gray-500 text-xs">Step {step + 1} of {steps.length} — {steps[step]}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-nowrap">
           <button
             onClick={() => setShowSaveModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/8 text-gray-400 hover:text-white text-xs font-semibold rounded-xl transition-all"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 bg-gray-800 hover:bg-gray-700 border border-white/8 text-gray-400 hover:text-white text-[10px] sm:text-xs font-semibold rounded-xl transition-all whitespace-nowrap"
           >
             <FaSave size={10} /> Save as Template
           </button>
           <button
             onClick={() => setShowTemplates(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-xs font-semibold rounded-xl transition-all"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[10px] sm:text-xs font-semibold rounded-xl transition-all whitespace-nowrap"
           >
             <FaLayerGroup size={10} /> Use Template
           </button>
@@ -394,8 +396,7 @@ export default function NewRecord() {
                   placeholder="Brief subject" className={inputCls} />
               </Field>
               <Field label="Document Date" required error={errors.documentDate}>
-                <input type="date" value={form.documentDate} onChange={e => set("documentDate", e.target.value)}
-                  className={inputCls} />
+                <CustomDatePicker value={form.documentDate} onChange={value => set("documentDate", value)} />
               </Field>
             </Grid>
 
@@ -454,8 +455,8 @@ export default function NewRecord() {
         {/* ══ Step 2 — Review & Sign ══ */}
         {step === 2 && (
           <div className="space-y-4">
-            <div className="bg-gray-800/50 border border-white/5 rounded-xl overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-white/5">
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-gray-600">
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Review</p>
               </div>
               <div className="divide-y divide-white/[0.04]">
@@ -507,7 +508,7 @@ export default function NewRecord() {
         <div className={`flex mt-6 gap-3 ${step > 0 ? "justify-between" : "justify-end"}`}>
           {step > 0 && (
             <button onClick={back}
-              className="px-4 py-2.5 rounded-xl border border-white/8 text-gray-400 hover:text-white hover:bg-gray-800 text-sm font-medium transition-all">
+              className="px-4 py-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-white hover:bg-gray-800 text-sm font-medium transition-all">
               Back
             </button>
           )}

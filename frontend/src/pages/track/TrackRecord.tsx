@@ -33,7 +33,7 @@ function TimelineStep({ label, time, done, isLast }: { label: string; time?: str
     <div className="flex gap-3">
       <div className="flex flex-col items-center">
         <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border transition-all ${
-          done ? "bg-emerald-500/20 border-emerald-500/30 shadow-lg shadow-emerald-500/10" : "bg-gray-800 border-white/5"
+          done ? "bg-emerald-500/20 border-emerald-500/30 shadow-lg shadow-emerald-500/10" : "bg-gray-800 border-gray-700"
         }`}>
           {done
             ? <FaCheck size={9} className="text-emerald-400" />
@@ -41,7 +41,7 @@ function TimelineStep({ label, time, done, isLast }: { label: string; time?: str
           }
         </div>
         {!isLast && (
-          <div className={`w-px flex-1 mt-1 ${done ? "bg-emerald-500/30" : "bg-white/5"}`} style={{ minHeight: 20 }} />
+          <div className={`w-px flex-1 mt-1 ${done ? "bg-emerald-500/30" : "bg-gray-700"}`} style={{ minHeight: 20 }} />
         )}
       </div>
       <div className="pb-5 min-w-0">
@@ -91,9 +91,9 @@ function TrackingResult({ record }: { record: TrackedRecord }) {
       <div className="hidden sm:block space-y-3">
 
         {/* ── Table card: header + row ── */}
-        <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
           {/* Column headers */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
+          <div className="grid grid-cols-12 gap-4 px-6 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-gray-700">
             <div className="col-span-5">Document</div>
             <div className="col-span-2">Person</div>
             <div className="col-span-2">Type</div>
@@ -161,9 +161,9 @@ function TrackingResult({ record }: { record: TrackedRecord }) {
         <div className="grid grid-cols-12 gap-3">
 
           {/* Left: Details (8 cols) */}
-          <div className="col-span-8 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+          <div className="col-span-8 bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
             {/* Sub-header */}
-            <div className="flex items-center justify-between px-6 py-3.5 border-b border-white/5">
+            <div className="flex items-center justify-between px-6 py-3.5 border-b border-gray-700">
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Document Details</p>
               <p className="text-[10px] text-gray-700">
                 Last updated: <span className="text-gray-600">{fmtTime(record.updatedAt)}</span>
@@ -197,8 +197,8 @@ function TrackingResult({ record }: { record: TrackedRecord }) {
           </div>
 
           {/* Right: Timeline (4 cols) */}
-          <div className="col-span-4 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-            <div className="px-6 py-3.5 border-b border-white/5">
+          <div className="col-span-4 bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
+            <div className="px-6 py-3.5 border-b border-gray-700">
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Document Timeline</p>
             </div>
 
@@ -214,9 +214,9 @@ function TrackingResult({ record }: { record: TrackedRecord }) {
 
               {/* Steps */}
               {steps.map(({ label, time, done }, i) => (
-                <div key={label} className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${done ? "bg-emerald-500/5 border border-emerald-500/10" : "bg-gray-800/30 border border-white/[0.03]"}`}>
+                <div key={label} className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${done ? "bg-emerald-500/5 border border-emerald-500/10" : "bg-gray-800/30 border border-gray-700/30"}`}>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border mt-0.5 ${
-                    done ? "bg-emerald-500/20 border-emerald-500/40" : "bg-gray-800 border-white/5"
+                    done ? "bg-emerald-500/20 border-emerald-500/40" : "bg-gray-800 border-gray-700"
                   }`}>
                     {done
                       ? <FaCheck size={8} className="text-emerald-400" />
@@ -254,8 +254,8 @@ function TrackingResult({ record }: { record: TrackedRecord }) {
           </div>
         </div>
 
-        <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/5">
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-700">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="text-white font-bold text-base leading-tight break-words">{record.documentTitle}</h2>
@@ -281,8 +281,8 @@ function TrackingResult({ record }: { record: TrackedRecord }) {
           </div>
         </div>
 
-        <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-white/5">
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-700">
             <p className="text-white text-sm font-bold">Document Timeline</p>
           </div>
           <div className="p-5">
@@ -293,7 +293,7 @@ function TrackingResult({ record }: { record: TrackedRecord }) {
         </div>
 
         {record.actionTaken && (
-          <div className="bg-gray-900 border border-white/5 rounded-2xl p-5">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5">
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Action Taken</p>
             <p className="text-white text-sm leading-relaxed">{record.actionTaken}</p>
           </div>
@@ -342,7 +342,7 @@ export default function TrackRecordPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Paste your tracking code..."
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
           />
         </div>
         <button
@@ -357,8 +357,8 @@ export default function TrackRecordPage() {
       {isLoading && (
         <div className="space-y-3 ">
           {/* Table card skeleton */}
-          <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-            <div className="h-10 bg-gray-800/60 border-b border-white/5" />
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
+            <div className="h-10 bg-gray-800/60 border-b border-gray-700" />
             <div className="grid grid-cols-12 gap-4 px-6 py-5">
               <div className="col-span-1 flex justify-center"><div className="w-3 h-3 rounded-full bg-gray-800" /></div>
               <div className="col-span-4 space-y-2"><div className="h-4 bg-gray-800 rounded w-3/4" /><div className="h-3 bg-gray-800/60 rounded w-1/2" /></div>
@@ -370,15 +370,15 @@ export default function TrackRecordPage() {
           </div>
           {/* Details + timeline skeleton */}
           <div className="grid grid-cols-12 gap-3">
-            <div className="col-span-8 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-              <div className="h-10 bg-gray-800/60 border-b border-white/5" />
+            <div className="col-span-8 bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
+              <div className="h-10 bg-gray-800/60 border-b border-gray-700" />
               <div className="p-5 space-y-3">
                 <div className="grid grid-cols-3 gap-3">{[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-gray-800/60 rounded-xl" />)}</div>
                 <div className="grid grid-cols-3 gap-3">{[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-gray-800/60 rounded-xl" />)}</div>
               </div>
             </div>
-            <div className="col-span-4 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-              <div className="h-10 bg-gray-800/60 border-b border-white/5" />
+            <div className="col-span-4 bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
+              <div className="h-10 bg-gray-800/60 border-b border-gray-700" />
               <div className="p-5 space-y-3">
                 <div className="h-1 bg-gray-800 rounded-full w-full" />
                 {[...Array(3)].map((_, i) => <div key={i} className="h-14 bg-gray-800/60 rounded-xl" />)}
@@ -406,9 +406,9 @@ export default function TrackRecordPage() {
 
       {/* ── Help text (empty state) ── */}
       {!trackingCode && !isLoading && (
-        <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden">
           {/* Column headers — mirrors Records table exactly */}
-          <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
+          <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-gray-700">
             <div className="col-span-5">Document</div>
             <div className="col-span-2">Person</div>
             <div className="col-span-2">Type</div>

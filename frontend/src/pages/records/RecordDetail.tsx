@@ -39,7 +39,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const inputCls =
-  "w-full px-3.5 py-2.5 bg-gray-800 border border-white/8 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all";
+  "w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all";
 
 /* ── Single detail row ── */
 const Row = ({ label, value }: { label: string; value?: string | null }) => (
@@ -110,7 +110,7 @@ function SignatureModal({
           </div>
         </div>
         <div className="flex gap-2 px-5 pb-5 pt-2 shrink-0">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-white/8 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
+          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-700 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
             Cancel
           </button>
           <button onClick={handleSubmit} disabled={isLoading || !sigDone}
@@ -287,7 +287,7 @@ export default function RecordDetail() {
                       <div className={`absolute top-[11px] left-1/2 w-full h-px ${done && steps[i + 1].done ? "bg-emerald-500/30" : "bg-white/5"}`} />
                     )}
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center z-10 shrink-0 ${
-                      done ? "bg-emerald-500/20 border border-emerald-500/30" : "bg-gray-800 border border-white/8"
+                      done ? "bg-emerald-500/20 border border-emerald-500/30" : "bg-gray-800 border border-gray-700"
                     }`}>
                       {done ? <FaCheck size={8} className="text-emerald-400" /> : <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />}
                     </div>
@@ -367,11 +367,11 @@ export default function RecordDetail() {
               <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest mb-1.5">{label}</p>
               {url ? (
                 <button onClick={() => setShowSig(key)}
-                  className="w-full h-20 rounded-xl bg-gray-800 border border-white/8 overflow-hidden hover:border-blue-500/25 transition-colors">
+                  className="w-full h-20 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden hover:border-blue-500/25 transition-colors">
                   <img src={url} alt={`${label} sig`} className="w-full h-full object-contain" />
                 </button>
               ) : (
-                <div className="w-full h-20 rounded-xl bg-gray-800/40 border border-dashed border-white/8 flex items-center justify-center">
+                <div className="w-full h-20 rounded-xl bg-gray-800/40 border border-dashed border-gray-700 flex items-center justify-center">
                   <p className="text-gray-700 text-[11px]">{empty}</p>
                 </div>
               )}

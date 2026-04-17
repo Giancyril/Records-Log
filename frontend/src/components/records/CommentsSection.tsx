@@ -45,7 +45,7 @@ export default function CommentsSection({ recordId, className = "" }: { recordId
     <div className={`bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col ${className}`}>
       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
         <h2 className="text-sm font-bold text-white">Internal Notes</h2>
-        <span className="px-2 py-0.5 bg-white/5 border border-white/8 text-gray-400 text-[10px] font-bold rounded-lg">
+        <span className="px-2 py-0.5 bg-white/5 border border-gray-700 text-gray-400 text-[10px] font-bold rounded-lg">
           {comments.length}
         </span>
       </div>
@@ -105,7 +105,7 @@ export default function CommentsSection({ recordId, className = "" }: { recordId
             }}
             placeholder="Add an internal note"
             rows={1}
-            className="flex-1 px-3.5 py-2.5 bg-gray-800 border border-white/8 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 resize-none transition-all"
+            className="flex-1 px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 resize-none transition-all"
           />
           <button
             type="submit"

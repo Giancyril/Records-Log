@@ -4,7 +4,7 @@ import { FaEraser } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const inputCls =
-  "w-full px-4 py-2.5 bg-gray-800 border border-white/8 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all";
+  "w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all";
 
 interface BulkActionModalProps {
   title:       string;
@@ -109,7 +109,7 @@ export default function BulkActionModal({
         <div className="flex gap-2 px-5 pb-5 pt-2 shrink-0">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 border border-white/8 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all"
+            className="flex-1 py-2.5 border border-gray-700 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all"
           >
             Cancel
           </button>

@@ -19,6 +19,7 @@ import type { Record as Rec } from "../../types/types";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useConfirm } from "../../hooks/useConfirm";
 import BulkActionModal from "../../components/records/BulkActionModal";
+import CustomDatePicker from "../../components/ui/CustomDatePicker";
 
 const TYPE_TABS = [
   { label: "All Records", value: "" },
@@ -214,16 +215,16 @@ export default function RecordsPage() {
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <button onClick={() => exportCSV(records)}
-            className="w-8 h-8 sm:w-auto sm:h-auto inline-flex items-center justify-center gap-1.5 sm:px-3 sm:py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-semibold rounded-xl transition-all"
+            className="w-8 h-8 sm:w-auto sm:h-auto inline-flex items-center justify-center gap-1.5 sm:px-3 sm:py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs font-semibold rounded-xl transition-all"
             title="Export CSV">
             <FaDownload size={11} /><span className="hidden sm:inline">Export</span>
           </button>
-          <label className="w-8 h-8 sm:w-auto sm:h-auto inline-flex items-center justify-center gap-1.5 sm:px-3 sm:py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-semibold rounded-xl transition-all cursor-pointer" title="Import CSV">
+          <label className="w-8 h-8 sm:w-auto sm:h-auto inline-flex items-center justify-center gap-1.5 sm:px-3 sm:py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs font-semibold rounded-xl transition-all cursor-pointer" title="Import CSV">
             <FaFileUpload size={11} /><span className="hidden sm:inline">{importing ? "Importing..." : "Import"}</span>
             <input type="file" accept=".csv" className="hidden" onChange={handleImportCSV} disabled={importing} />
           </label>
           <button onClick={() => setShowFilters(f => !f)}
-            className={`w-8 h-8 inline-flex items-center justify-center rounded-xl border text-xs transition-all ${showFilters || hasFilters ? "bg-blue-600/20 border-blue-500/30 text-blue-400" : "bg-gray-800 hover:bg-gray-700 border-white/5 text-gray-300"}`}>
+            className={`w-8 h-8 inline-flex items-center justify-center rounded-xl border text-xs transition-all ${showFilters || hasFilters ? "bg-blue-600/20 border-blue-500/30 text-blue-400" : "bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300"}`}>
             <FaFilter size={10} />
           </button>
           <Link to="/records/new"
@@ -235,7 +236,7 @@ export default function RecordsPage() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Date Range</p>
             {hasFilters && (
@@ -245,13 +246,11 @@ export default function RecordsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">From</label>
-              <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }}
-                className="w-full px-3 py-2 bg-gray-800 border border-white/8 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+              <CustomDatePicker value={dateFrom} onChange={value => { setDateFrom(value); setPage(1); }} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">To</label>
-              <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }}
-                className="w-full px-3 py-2 bg-gray-800 border border-white/8 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+              <CustomDatePicker value={dateTo} onChange={value => { setDateTo(value); setPage(1); }} />
             </div>
           </div>
         </div>
@@ -283,7 +282,7 @@ export default function RecordsPage() {
       )}
 
       {/* Type tabs */}
-      <div className="flex p-1 sm:p-1.5 bg-gray-900/50 backdrop-blur-md border border-white/5 rounded-xl sm:rounded-2xl w-full shadow-2xl shadow-black/40">
+      <div className="flex p-1 sm:p-1.5 bg-gray-900/50 backdrop-blur-md border border-gray-700 rounded-xl sm:rounded-2xl w-full shadow-2xl shadow-black/40">
         {TYPE_TABS.map(({ label, value }) => (
           <button
             key={value}
@@ -307,7 +306,7 @@ export default function RecordsPage() {
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search records..."
-            className="w-full pl-10 pr-10 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-xs sm:text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full pl-10 pr-10 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-xs sm:text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
           />
           {search && (
             <button onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
@@ -335,10 +334,10 @@ export default function RecordsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-x-auto">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl overflow-x-auto">
 
         {/* ── Desktop header: checkbox merged into Document col ── */}
-        <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
+        <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-gray-600">
           <div className="col-span-5 flex items-center gap-3">
             <button onClick={toggleAll} className="text-gray-500 hover:text-white transition-colors shrink-0">
               {allOnPageSelected ? <FaCheckSquare size={13} className="text-blue-400" /> : <FaSquare size={13} />}
@@ -451,17 +450,17 @@ export default function RecordsPage() {
       {meta && meta.totalPage > 1 && (
         <div className="flex items-center justify-center gap-1.5">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-gray-400 text-xs disabled:opacity-40 hover:text-white transition-colors">
+            className="px-3 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-400 text-xs disabled:opacity-40 hover:text-white transition-colors">
             Prev
           </button>
           {Array.from({ length: meta.totalPage }, (_, i) => i + 1).map(p => (
             <button key={p} onClick={() => setPage(p)}
-              className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${p === page ? "bg-blue-600 text-white" : "bg-gray-900 border border-white/5 text-gray-400 hover:text-white"}`}>
+              className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${p === page ? "bg-blue-600 text-white" : "bg-gray-900 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {p}
             </button>
           ))}
           <button onClick={() => setPage(p => Math.min(meta.totalPage, p + 1))} disabled={page === meta.totalPage}
-            className="px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-gray-400 text-xs disabled:opacity-40 hover:text-white transition-colors">
+            className="px-3 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-400 text-xs disabled:opacity-40 hover:text-white transition-colors">
             Next
           </button>
         </div>

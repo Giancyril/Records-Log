@@ -216,7 +216,7 @@ export default function Overview() {
 
           <div className="flex-1 space-y-3">
             {[
-              { label: "Added today",     value: today, accent: "text-white",        bg: "bg-white/5 border-white/8" },
+              { label: "Added today",     value: today, accent: "text-white",        bg: "bg-white/5 border-gray-700" },
               { label: "Added this week", value: week,  accent: "text-blue-400",     bg: "bg-blue-500/8 border-blue-500/15" },
               { label: "Total records",   value: total, accent: "text-purple-400",   bg: "bg-purple-500/8 border-purple-500/15" },
             ].map(({ label, value: v, accent, bg }) => (
